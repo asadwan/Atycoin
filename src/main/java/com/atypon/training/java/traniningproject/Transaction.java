@@ -15,29 +15,35 @@ public final class Transaction {
 
     private static int sequence = 0;
     public String transactionId;
+
     @JsonIgnore
     public PublicKey sender;
-    public PublicKey recipient;
+    public String recipientAddress;
     public float amount;
     public byte[] signature;
     public ArrayList<TransactionInput> inputs = new ArrayList<>();
     public ArrayList<TransactionOutput> outputs = new ArrayList<>();
+
+    @JsonIgnore
     private boolean signatureWasGenerated = false;
 
 
     //For Coinbase transaction use
     public Transaction(PublicKey recipient) {
         this.sender = null;
-        this.recipient = recipient;
+        this.recipientAddress = recipientAddress;
         this.amount = 100f;
         this.inputs = null;
     }
 
-    public Transaction(PublicKey sender, PublicKey recipient, float amount, ArrayList<TransactionInput> inputs) {
+    public Transaction(PublicKey sender, String recipientAddress, float amount, ArrayList<TransactionInput> inputs) {
         this.sender = sender;
-        this.recipient = recipient;
+        this.recipientAddress = recipientAddress;
         this.amount = amount;
         this.inputs = inputs;
+    }
+
+    public Transaction() {
     }
 
     public boolean processTransaction() {
@@ -61,11 +67,13 @@ public final class Transaction {
         float change = getInputsAmount() - amount;
         transactionId = generateTransactionHash();
         // Send transaction amount to the recipient
-        TransactionOutput transactionOutputToRecipient = new TransactionOutput(recipient, amount, transactionId);
+        TransactionOutput transactionOutputToRecipient = new TransactionOutput(recipientAddress,
+                amount, transactionId);
         outputs.add(transactionOutputToRecipient);
         if (change > 0) {
             // Send change back to sender
-            TransactionOutput transactionOutputToSender = new TransactionOutput(recipient, amount, transactionId);
+            TransactionOutput transactionOutputToSender = new TransactionOutput(sha160(sender.toString()),
+                    change, transactionId);
             outputs.add(transactionOutputToSender);
         }
 
@@ -105,11 +113,7 @@ public final class Transaction {
 
     public void generateSignature(PrivateKey privateKey) {
         String data;
-        if (sender == null) {
-            data = getStringFromKey(recipient) + amount;
-        } else {
-            data = getStringFromKey(sender) + getStringFromKey(recipient) + amount;
-        }
+        data = getStringFromKey(sender) + recipientAddress + amount;
         signature = applyECDSASignuture(privateKey, data);
         signatureWasGenerated = true;
     }
@@ -117,11 +121,7 @@ public final class Transaction {
     public boolean verifySignature() {
         String data;
         if (signatureWasGenerated) {
-            if (sender == null) {
-                data = getStringFromKey(recipient) + amount;
-            } else {
-                data = getStringFromKey(sender) + getStringFromKey(recipient) + amount;
-            }
+            data = getStringFromKey(sender) + recipientAddress + amount;
             return verifyECDSASignuture(sender, signature, data);
         }
         System.out.println("Can't verify transaction signature, it has not yet been generated");
@@ -130,16 +130,13 @@ public final class Transaction {
 
     private String generateTransactionHash() {
         ++sequence;
-        String hash = sha256(getStringFromKey(sender) + getStringFromKey(recipient)
+        String hash = sha256(getStringFromKey(sender) + recipientAddress
                 + amount + sequence);
         return hash;
     }
 
     @Override
     public String toString() {
-        if (sender == null) {
-            return getStringFromKey(recipient) + amount;
-        }
-        return getStringFromKey(sender) + "  " + "To: " + recipient + "  " + "Amount: " + amount;
+        return getStringFromKey(sender) + "  " + "To: " + recipientAddress + "  " + "Amount: " + amount;
     }
 }

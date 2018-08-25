@@ -29,12 +29,16 @@ public final class Block {
     @Getter
     private ArrayList<Transaction> transactions;
 
+    @Getter
+    @Setter
+    private Coinbase coinbase;
+
     public Block() {
     }
 
-    public Block(
-            String previousBlockHash, ArrayList<Transaction> transactions) {
+    public Block(String previousBlockHash, Coinbase coinbase, ArrayList<Transaction> transactions) {
         this.index = ++blockCounter;
+        this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
         this.transactions = (ArrayList<Transaction>) transactions.clone();

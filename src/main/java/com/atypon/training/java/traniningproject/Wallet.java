@@ -4,13 +4,21 @@ import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 
+import static com.atypon.training.java.traniningproject.Utility.sha160;
+
 public final class Wallet {
+
+    static {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //Setup Bouncey castle as a Security Provider
+    }
 
     public PrivateKey privateKey;
     public PublicKey publicKey;
+    public String address;
 
     public Wallet() {
         generateKeyPair();
+        address = sha160(this.publicKey.toString());
     }
 
     private void generateKeyPair() {
@@ -32,14 +40,14 @@ public final class Wallet {
     public float getBalance() {
         float balance = 0;
         for (TransactionOutput UTXO : Blockchain.UTXOs.values()) {
-            if (UTXO.isMine(publicKey)) {
+            if (UTXO.isMine(address)) {
                 balance += UTXO.getAmount();
             }
         }
         return balance;
     }
 
-    public Transaction sendCoin(PublicKey recipient, float amount) {
+    public Transaction sendCoin(String recipientAddress, float amount) {
         if (getBalance() < amount) {
             System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
             return null;
@@ -49,7 +57,7 @@ public final class Wallet {
 
         float total = 0;
         for (TransactionOutput UTXO : Blockchain.UTXOs.values()) {
-            if (!UTXO.isMine(publicKey)) {
+            if (!UTXO.isMine(address)) {
                 continue;
             }
             total += UTXO.getAmount();
@@ -59,12 +67,13 @@ public final class Wallet {
             }
         }
 
-        Transaction newTransaction = new Transaction(this.publicKey, recipient, amount, inputs);
+        Transaction newTransaction = new Transaction(this.publicKey, recipientAddress, amount, inputs);
         newTransaction.generateSignature(this.privateKey);
 
-        for (TransactionInput input : inputs) {
-            Blockchain.UTXOs.remove(input.getUTXO().getId());
-        }
+//        for (TransactionInput input : inputs) {
+//            System.out.println(input.getUTXO().getId());
+//            Blockchain.UTXOs.remove(input.getUTXO().getId());
+//        }
 
         return newTransaction;
     }

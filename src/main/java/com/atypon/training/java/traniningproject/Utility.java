@@ -21,7 +21,21 @@ public final class Utility {
             e.printStackTrace();
         }
         md.update(data.getBytes());
-        return bytesToHex(md.digest()).toUpperCase();
+        return bytesToHex(md.digest());
+    }
+
+    /**
+     * Calculates the sha160 hash to a given input "data"
+     */
+    public static String sha160(String data) {
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        md.update(data.getBytes());
+        return bytesToHex(md.digest());
     }
 
     /**

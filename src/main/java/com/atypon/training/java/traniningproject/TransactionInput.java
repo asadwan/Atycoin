@@ -1,13 +1,18 @@
 package com.atypon.training.java.traniningproject;
 
-public class TransactionInput {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties
+public class TransactionInput {
 
     private String transactionOutputId;
     private TransactionOutput UTXO;
 
     public TransactionInput(String transactionOutputId) {
         this.transactionOutputId = transactionOutputId;
+    }
+
+    public TransactionInput() {
     }
 
     public String getTransactionOutputId() {
