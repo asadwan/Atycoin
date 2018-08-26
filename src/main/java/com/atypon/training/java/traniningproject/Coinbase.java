@@ -3,7 +3,7 @@ package com.atypon.training.java.traniningproject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties
-public class Coinbase {
+public final class Coinbase {
 
     private TransactionOutput blockReward;
 

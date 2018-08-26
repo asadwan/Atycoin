@@ -15,16 +15,14 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @SpringBootApplication
 @RestController
-public class BlockchainRESTfulAPI {
-
-    static Blockchain blockchain = new Blockchain();
-    static Wallet wallet = new Wallet();
+public class AtycoinRESTfulAPI {
 
     static {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //Setup Bouncey castle as a Security Provider
-        Blockchain.address = wallet.publicKey;
-        Blockchain.privateKey = wallet.privateKey;
     }
+
+    static Blockchain blockchain = new Blockchain();
+    static Wallet wallet = new Wallet();
 
     @RequestMapping(value = "/mine_block", method = GET, produces = "application/json")
     public static Block mineBlock() {
@@ -43,7 +41,7 @@ public class BlockchainRESTfulAPI {
 
     @RequestMapping(value = "/blockchain_valid", method = GET, produces = "application/json")
     public static boolean isBlockChainValid() {
-        return blockchain.isChainValid(blockchain.getChain());
+        return blockchain.isChainValid(blockchain.getBlocks());
     }
 
     @RequestMapping(value = "/add_transaction", method = POST, produces = "application/json")
@@ -55,7 +53,7 @@ public class BlockchainRESTfulAPI {
     }
 
     @RequestMapping(value = "get_balance", method = GET, produces = "application/json")
-    public static Map<String, Float> get_balance() {
+    public static Map<String, Float> getBalance() {
         float balance = blockchain.wallet.getBalance();
         Map<String, Float> response = new HashMap<>();
         response.put("balance", balance);
@@ -82,6 +80,6 @@ public class BlockchainRESTfulAPI {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(BlockchainRESTfulAPI.class, args);
+        SpringApplication.run(AtycoinRESTfulAPI.class, args);
     }
 }

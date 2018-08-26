@@ -1,11 +1,9 @@
 package com.atypon.training.java.traniningproject;
 
+import com.atypon.training.java.traniningproject.internodecommunication.Node;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.web.client.RestTemplate;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,17 +14,14 @@ import static com.atypon.training.java.traniningproject.Utility.sha256;
 @JsonIgnoreProperties
 public final class Blockchain {
 
-    public static float minimumTransaction = 0.01f;
+    public static float minimumTransaction = 0.1f;
+    public static int difficulty = 5;
     public static HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
-    public static PublicKey address;
-    @JsonIgnore
-    public static PrivateKey privateKey;
-    static int difficulty = 5;
     private ArrayList<Block> chain;
-    private int length;
     private ArrayList<Transaction> mempool = new ArrayList<>();
     private Set<Node> network = new HashSet<>();
     Wallet wallet = new Wallet();
+
     public Blockchain() {
         this.chain = new ArrayList<>();
 
@@ -34,13 +29,15 @@ public final class Blockchain {
         String genesisBlockPreviousHash = Utility.repeat("0", 64);
         addBlock(genesisBlockPreviousHash);
     }
-    public ArrayList<Block> getChain() {
+
+    public ArrayList<Block> getBlocks() {
         return chain;
     }
+
     public int getLength() {
-        length = chain.size();
-        return length;
+        return chain.size();
     }
+
     public Block addBlock(String previousHash) {
         Coinbase coinbase = new Coinbase(wallet.address);
         UTXOs.put(coinbase.getBlockReward().getId(), coinbase.getBlockReward());
@@ -50,13 +47,17 @@ public final class Blockchain {
         chain.add(block);
         return block;
     }
+
+    @JsonIgnore
     public Block getPreviousBlock() {
         return chain.get(chain.size() - 1);
     }
+
     public String calculateHash(Block block) {
         String hash = sha256(block.toString());
-        return hash.toUpperCase();
+        return hash;
     }
+
     public boolean isChainValid(ArrayList<Block> chain) {
         Block previousBlock;
         Block currentBlock;
@@ -75,25 +76,30 @@ public final class Blockchain {
         }
         return true;
     }
+
     public void addTransaction(Transaction transaction) {
         this.mempool.add(transaction);
     }
+
     public void addNode(Node node) {
         this.network.add(node);
     }
-    public void replaceChain() {
-        ArrayList<Block> longestChain = this.chain;
-        int maxLength = this.chain.size();
-        RestTemplate restTemplate = new RestTemplate();
-        for (Node node : network) {
-            System.out.println(node.getAddress().toString() + "/get_chain");
-            Blockchain nodeBlockchain = restTemplate.getForObject(node.getAddress().toString() + "/get_chain",
-                    Blockchain.class);
-            System.out.println(nodeBlockchain.getLength());
-            if (nodeBlockchain.getLength() > maxLength && isChainValid(nodeBlockchain.chain)) {
-                longestChain = nodeBlockchain.chain;
-            }
-        }
-        this.chain = longestChain;
-    }
+
+    /**
+     public void replaceChain() {
+     ArrayList<Block> longestChain = this.chain;
+     int maxLength = this.chain.size();
+     RestTemplate restTemplate = new RestTemplate();
+     for (Node node : network) {
+     System.out.println(node.getAddress().toString() + "/get_chain");
+     Blockchain nodeBlockchain = restTemplate.getForObject(node.getAddress().toString() + "/get_chain",
+     Blockchain.class);
+     System.out.println(nodeBlockchain.getLength());
+     if (nodeBlockchain.getLength() > maxLength && isChainValid(nodeBlockchain.chain)) {
+     longestChain = nodeBlockchain.chain;
+     }
+     }
+     this.chain = longestChain;
+     }
+     **/
 }
