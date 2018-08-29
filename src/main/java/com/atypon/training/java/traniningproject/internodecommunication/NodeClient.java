@@ -7,37 +7,57 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class NodeClient {
 
-    public final String HOST = "localhost";
-    private final String INITIAL_NODES_FILE = "initial-nodes.txt";
+    private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
+
+
+    public final int NODE_ADDRESS;
+    private final String INITIAL_NODES_FILE = "/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/resources/initial-nodes.txt";
     public ArrayList<Socket> nodesSkts = new ArrayList<>();
-    public Set<Node> peers = new HashSet<>();
-    private ArrayList<PrintWriter> outputStreams = new ArrayList<>();
+    public Set<Integer> peersAddresses;
+
+    public Map<String, PrintWriter> outputStreams = new HashMap<>();
+
+    public Map<Integer, Socket> peersConnections = new HashMap<>();
+
+    public NodeClient(int NODE_ADDRESS, Set<Integer> peersAddresses) {
+        this.NODE_ADDRESS = NODE_ADDRESS;
+        this.peersAddresses = peersAddresses;
+    }
 
     public void start() {
         loadSavedNodesAddresses();
-        connectToNodes();
-        broadcastMyAddress(null);
+        connectToPeers();
     }
 
-    public void connectToNodes() {
+    public void connectToPeers() {
+        LOGGER.info(String.valueOf("Connecting to peers..."));
         int nodePort;
-        String nodeHost;
-        for (Node node : peers) {
-            nodePort = node.getPort();
-            nodeHost = node.getHost();
-            try (Socket skt = new Socket(nodeHost, nodePort);
-                 PrintWriter pw = new PrintWriter(skt.getOutputStream())) {
+        final String nodeHost = "localhost";
+        for (Integer peerAddress : peersAddresses) {
+            if (peerAddress.equals(NODE_ADDRESS)) continue; // If this address is same as current node address skip
+            nodePort = peerAddress;
+            try {
+                Socket skt = new Socket(nodeHost, nodePort);
+                PrintWriter pw = new PrintWriter(skt.getOutputStream());
                 nodesSkts.add(skt);
-                outputStreams.add(pw);
+                peersConnections.put(nodePort, skt);
+                outputStreams.put(String.valueOf(nodePort), pw);
+                pw.println(NODE_ADDRESS); // Replace this with this peer address (port num)
+                LOGGER.info("A connection was established with peer " + nodePort);
             } catch (UnknownHostException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "An IOException has occurred", e);
             } catch (IOException e) {
-                e.printStackTrace();
+                LOGGER.log(Level.WARNING, "An IOException has occurred", e);
             }
         }
     }
@@ -45,38 +65,44 @@ public class NodeClient {
     public void loadSavedNodesAddresses() {
         try (BufferedReader br = new BufferedReader(new FileReader(INITIAL_NODES_FILE))) {
             String line;
-            int port;
             while ((line = br.readLine()) != null) {
-                port = Integer.parseInt(line);
-                Node node = new Node(port);
-                peers.add(node);
+                int port = Integer.parseInt(line);
+                peersAddresses.add(port);
             }
+            LOGGER.info("Loaded peers addresses from file 'initial-nodes.txt'");
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Initial nodes addresses file was not found", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.WARNING, "An IOException has occurred", e);
         }
     }
 
-    public void broadcastMyAddress(Node node) {
-        Map<String, Node> myNodeMessage = new HashMap<>();
-        myNodeMessage.put("node", node);
-        Gson gson = new Gson();
-        String messageJson = gson.toJson(myNodeMessage);
-        for (PrintWriter ouputStream : outputStreams) {
-            ouputStream.print(messageJson);
-            ouputStream.flush();
-        }
-    }
+//    public void broadcastMyAddress(Node node) {
+//        Map<String, Node> myNodeMessage = new HashMap<>();
+//        myNodeMessage.put("node", node);
+//        Gson gson = new Gson();
+//        String messageJson = gson.toJson(myNodeMessage);
+//        for (Map.Entry<String, PrintWriter> entry: outputStreams.entrySet()) {
+//            PrintWriter outToPeer = entry.getValue();
+//            String peerAddress = entry.getKey();
+//            outToPeer.println(messageJson);
+//            outToPeer.flush();
+//            LOGGER.info("This peer address has been shared with peer " + peerAddress);
+//        }
+//    }
 
     public void broadcastNewTransaction(Transaction transaction) {
         Map<String, Transaction> newTransactionMessage = new HashMap<>();
         newTransactionMessage.put("transaction", transaction);
         Gson gson = new Gson();
-        String messageJson = gson.toJson(newTransactionMessage);
-        for (PrintWriter ouputStream : outputStreams) {
-            ouputStream.print(messageJson);
-            ouputStream.flush();
+        String messageJson;
+        messageJson = gson.toJson(newTransactionMessage);
+        for (Map.Entry<String, PrintWriter> entry : outputStreams.entrySet()) {
+            PrintWriter outToPeer = entry.getValue();
+            String peerAddress = entry.getKey();
+            outToPeer.println(messageJson);
+            outToPeer.flush();
+            LOGGER.info("A new transaction has been shared with peer" + peerAddress);
         }
     }
 
@@ -85,20 +111,26 @@ public class NodeClient {
         newBlockMessage.put("block", block);
         Gson gson = new Gson();
         String messageJson = gson.toJson(newBlockMessage);
-        for (PrintWriter ouputStream : outputStreams) {
-            ouputStream.print(messageJson);
-            ouputStream.flush();
+        for (Map.Entry<String, PrintWriter> entry : outputStreams.entrySet()) {
+            PrintWriter outToPeer = entry.getValue();
+            String peerAddress = entry.getKey();
+            outToPeer.println(messageJson);
+            outToPeer.flush();
+            LOGGER.info("A new block has been shared with peer " + peerAddress);
         }
     }
 
     public void broadcastPeersList() {
-        Map<String, Set<Node>> peersListMessage = new HashMap<>();
-        peersListMessage.put("peers", peers);
+        Map<String, Set<Integer>> peersListMessage = new HashMap<>();
+        peersListMessage.put("peers", peersAddresses);
         Gson gson = new Gson();
         String messageJson = gson.toJson(peersListMessage);
-        for (PrintWriter ouputStream : outputStreams) {
-            ouputStream.print(messageJson);
-            ouputStream.flush();
+        for (Map.Entry<String, PrintWriter> entry : outputStreams.entrySet()) {
+            PrintWriter outToPeer = entry.getValue();
+            String peerAddress = entry.getKey();
+            outToPeer.println(messageJson);
+            outToPeer.flush();
+            LOGGER.info("This peer's stored peers addresses list has been sent to " + peerAddress);
         }
     }
 

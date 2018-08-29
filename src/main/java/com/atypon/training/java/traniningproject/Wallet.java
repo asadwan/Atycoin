@@ -1,11 +1,14 @@
 package com.atypon.training.java.traniningproject;
 
+import org.springframework.web.bind.annotation.RestController;
+
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 
 import static com.atypon.training.java.traniningproject.Utility.sha160;
 
+@RestController
 public final class Wallet {
 
     static {

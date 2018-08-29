@@ -1,5 +1,6 @@
 package com.atypon.training.java.traniningproject;
 
+import com.atypon.training.java.traniningproject.internodecommunication.Node;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,12 +18,14 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RestController
 public class AtycoinRESTfulAPI {
 
-    static {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //Setup Bouncey castle as a Security Provider
-    }
+    private static Node myNode;
+    private static Blockchain blockchain;
+    private static Wallet wallet;
 
-    static Blockchain blockchain = new Blockchain();
-    static Wallet wallet = new Wallet();
+    static {
+        //Setup Bouncey castle as a Security Provider
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    }
 
     @RequestMapping(value = "/mine_block", method = GET, produces = "application/json")
     public static Block mineBlock() {
@@ -31,6 +34,7 @@ public class AtycoinRESTfulAPI {
         //Transaction transaction = new Transaction(, "Abdullah", 100.0, new ArrayList<TransactionInput>());
         //blockchain.addTransaction(transaction);
         Block block = blockchain.addBlock(previousHash);
+        myNode.client.broadcastNewBlock(block);
         return block;
     }
 
@@ -54,7 +58,7 @@ public class AtycoinRESTfulAPI {
 
     @RequestMapping(value = "get_balance", method = GET, produces = "application/json")
     public static Map<String, Float> getBalance() {
-        float balance = blockchain.wallet.getBalance();
+        float balance = wallet.getBalance();
         Map<String, Float> response = new HashMap<>();
         response.put("balance", balance);
         return response;
@@ -80,6 +84,9 @@ public class AtycoinRESTfulAPI {
     }
 
     public static void main(String[] args) {
+        myNode = new Node();
+        blockchain = myNode.getBlockchain();
+        wallet = myNode.getWallet();
         SpringApplication.run(AtycoinRESTfulAPI.class, args);
     }
 }

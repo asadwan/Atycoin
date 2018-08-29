@@ -1,31 +1,25 @@
 package com.atypon.training.java.traniningproject;
 
 import com.atypon.training.java.traniningproject.internodecommunication.Node;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
 
 public class TestApp {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
-        Node node = new Node(8764);
-        Map<String, Node> myNode = new HashMap<>();
-        Type stringNodeType = new TypeToken<Map<String, Node>>() {
-        }.getType();
-        myNode.put("node", node);
-        Gson gson = new Gson();
-        String json = gson.toJson(myNode);
-        //System.out.println(json);
+        Node myNode = new Node();
 
-        myNode = gson.fromJson(json, Map.class);
-        System.out.println(myNode);
-        System.out.println(myNode.keySet().contains("node"));
+        myNode.server.start();
 
-        myNode = gson.fromJson(json, stringNodeType);
-        System.out.println(myNode);
+
+        myNode.client.start();
+
+        Transaction transaction = new Transaction();
+
+        myNode.client.broadcastNewTransaction(transaction);
+
+        Block block = new Block();
+        //myNode.client.broadcastNewBlock(block);
+
+        myNode.server.join();
 
     }
 }
