@@ -11,17 +11,19 @@ import static com.atypon.training.java.traniningproject.Utility.sha160;
 @RestController
 public final class Wallet {
 
-    static {
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //Setup Bouncey castle as a Security Provider
-    }
+    public static final Wallet wallet = new Wallet();
 
     public PrivateKey privateKey;
     public PublicKey publicKey;
     public String address;
 
-    public Wallet() {
+    private Wallet() {
         generateKeyPair();
         address = sha160(this.publicKey.toString());
+    }
+
+    public static Wallet getSharedInstance() {
+        return wallet;
     }
 
     private void generateKeyPair() {

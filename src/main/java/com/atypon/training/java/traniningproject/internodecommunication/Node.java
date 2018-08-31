@@ -1,8 +1,5 @@
 package com.atypon.training.java.traniningproject.internodecommunication;
 
-import com.atypon.training.java.traniningproject.Blockchain;
-import com.atypon.training.java.traniningproject.Wallet;
-
 import java.io.*;
 import java.util.Objects;
 import java.util.Set;
@@ -10,27 +7,25 @@ import java.util.concurrent.ConcurrentSkipListSet;
 
 public final class Node {
 
-    public transient NodeServer server;
-    public transient NodeClient client;
-
-    private Blockchain blockchain;
-    private Wallet wallet;
+    private static volatile Node instance = new Node();
 
     private Set<Integer> peersAddresses = new ConcurrentSkipListSet<>();
+    private String host = "localhost";
+    private int port = getPortCounter(); // Represents the peer network address
 
-    private String host;
-    private int port; // Represents the peer address
+    public static Node getSharedInstance() {
+        if (instance == null) { // Check 1
+            synchronized (Node.class) {
+                if (instance == null) { // Check 2
+                    instance = new Node();
+                }
+            }
+        }
+        return instance;
+    }
 
-
-    public Node() {
-        this.host = "localhost";
-        this.port = getPortCounter();
-        server = new NodeServer(port, peersAddresses);
-        client = new NodeClient(port, peersAddresses);
-        blockchain = new Blockchain();
-        wallet = new Wallet();
-        server.start();
-        client.start();
+    public Set<Integer> getPeersAddresses() {
+        return peersAddresses;
     }
 
     public String getHost() {
@@ -41,20 +36,13 @@ public final class Node {
         return port;
     }
 
-    public Blockchain getBlockchain() {
-        return blockchain;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
-
     private Integer getPortCounter() {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(
                     new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
                             "/com/atypon/training/java/traniningproject/internodecommunication/port.txt")));
             int port = Integer.parseInt(bufferedReader.readLine());
+            peersAddresses.add(port);
             PrintWriter printWriter = new PrintWriter(new FileWriter(
                     new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
                             "/com/atypon/training/java/traniningproject/internodecommunication/port.txt")));

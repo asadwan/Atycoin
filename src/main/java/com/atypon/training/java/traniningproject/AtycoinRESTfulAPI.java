@@ -1,6 +1,8 @@
 package com.atypon.training.java.traniningproject;
 
 import com.atypon.training.java.traniningproject.internodecommunication.Node;
+import com.atypon.training.java.traniningproject.internodecommunication.NodeClient;
+import com.atypon.training.java.traniningproject.internodecommunication.NodeServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -34,7 +37,7 @@ public class AtycoinRESTfulAPI {
         //Transaction transaction = new Transaction(, "Abdullah", 100.0, new ArrayList<TransactionInput>());
         //blockchain.addTransaction(transaction);
         Block block = blockchain.addBlock(previousHash);
-        myNode.client.broadcastNewBlock(block);
+        NodeClient.getSharedInstance().broadcastNewBlock(block);
         return block;
     }
 
@@ -73,7 +76,7 @@ public class AtycoinRESTfulAPI {
     public static Transaction sendCoin(@RequestBody HashMap<String, String> responseBodyJson) {
         float amount = Float.parseFloat(responseBodyJson.get("amount"));
         String recipient = responseBodyJson.get("recipient");
-        Transaction transaction = blockchain.wallet.sendCoin(recipient, amount);
+        Transaction transaction = Wallet.getSharedInstance().sendCoin(recipient, amount);
         boolean success = transaction.processTransaction();
         if (success) {
             blockchain.addTransaction(transaction);
@@ -83,10 +86,18 @@ public class AtycoinRESTfulAPI {
         }
     }
 
+    @RequestMapping(value = "get_connected_peers", method = GET, produces = "application/json")
+    public static Set<Integer> getConnectedPeers() {
+        return Node.getSharedInstance().getPeersAddresses();
+    }
+
     public static void main(String[] args) {
-        myNode = new Node();
-        blockchain = myNode.getBlockchain();
-        wallet = myNode.getWallet();
+        myNode = Node.getSharedInstance();
+        NodeServer.getSharedInstance().start();
+        NodeClient.getSharedInstance().start();
+        blockchain = Blockchain.getSharedInstance();
+        blockchain.createGenesisBlock();
+        wallet = Wallet.getSharedInstance();
         SpringApplication.run(AtycoinRESTfulAPI.class, args);
     }
 }

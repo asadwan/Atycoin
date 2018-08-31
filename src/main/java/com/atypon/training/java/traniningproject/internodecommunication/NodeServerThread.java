@@ -16,46 +16,47 @@ import java.util.logging.Logger;
 
 public class NodeServerThread implements Runnable {
 
-    private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
-    private Set<Integer> peersAddresses;
+    private static final Logger LOGGER = Logger.getLogger(NodeServerThread.class.getName());
+
+    private Set<Integer> peersAddresses = Node.getSharedInstance().getPeersAddresses();
     private Socket skt;
     private BufferedReader inputStream;
-    private String nodeAddress; // The address of the peer this thread is handling communication with
-    private Blockchain blockchain;
+    private Integer nodeAddress; // The address of the peer this thread is handling communication with
+    private Blockchain blockchain = Blockchain.getSharedInstance();
+    private NodeClient nodeClient = NodeClient.getSharedInstance();
 
-    public NodeServerThread(Socket skt, BufferedReader inputStream, String nodeAddress,
-                            Set<Integer> peersAddresses) {
+    public NodeServerThread(Socket skt, BufferedReader inputStream) {
         this.skt = skt;
         this.inputStream = inputStream;
-        this.nodeAddress = nodeAddress;
-        this.peersAddresses = peersAddresses;
-        //this.blockchain = blockchain;
     }
 
     @Override
     public void run() {
         try {
-            LOGGER.info("Handling communications with peer " + nodeAddress);
             Gson gson = new Gson();
             String message;
             while ((message = inputStream.readLine()) != null) {
                 Map messageMap = gson.fromJson(message, Map.class);
-                if (messageMap.keySet().contains("node")) {
-                    Type stringNodeMapType = new TypeToken<Map<String, Node>>() {
+                if (messageMap.keySet().contains("peer")) {
+                    Type stringNodeMapType = new TypeToken<Map<String, Integer>>() {
                     }.getType();
-                    Map<String, Node> nodeMap = gson.fromJson(message, stringNodeMapType);
-                    Node node = nodeMap.get("node");
-                    new Thread(() -> {
-                        System.out.println(node.getPort());
-                        System.out.println("Received new node info");
-                    }).start();
-
+                    Map<String, Integer> nodeMap = gson.fromJson(message, stringNodeMapType);
+                    Integer newPeerAddress = nodeMap.get("peer");
+                    nodeAddress = newPeerAddress;
+                    LOGGER.info("An incoming connection from peer '" + newPeerAddress + "' has been established");
+                    if (!peersAddresses.contains(newPeerAddress)) {
+                        peersAddresses.add(newPeerAddress);
+                        nodeClient.connectToPeer(newPeerAddress);
+                        nodeClient.sendMyAddressToPeer(newPeerAddress); //Connect back to the peer
+                        //nodeClient.broadcastNewPeerAddress(newPeerAddress);
+                        nodeClient.sendConnectedPeersAddressesToPeer(newPeerAddress);
+                    }
                 } else if (messageMap.keySet().contains("transaction")) {
                     Type stringTransactionMapType = new TypeToken<Map<String, Transaction>>() {
                     }.getType();
                     Map<String, Transaction> transactionMap = gson.fromJson(message, stringTransactionMapType);
                     Transaction transaction = transactionMap.get("transaction");
-                    new Thread(() -> System.out.println("Received transaction")).start();
+                    LOGGER.info("A new transaction has been received from  " + nodeAddress);
 
                 } else if (messageMap.keySet().contains("block")) {
                     Type stringBlockMapType = new TypeToken<Map<String, Block>>() {
@@ -63,24 +64,29 @@ public class NodeServerThread implements Runnable {
                     Map<String, Block> blockMapMap = gson.fromJson(message, stringBlockMapType);
                     Block block = blockMapMap.get("block");
                     new Thread(() -> {
-                        System.out.println("Received new block from peer " + nodeAddress);
-                    });
+                        Blockchain blockchain = Blockchain.getSharedInstance();
+                        blockchain.addBlock(block);
+                        LOGGER.info("A new block has been received from  " + nodeAddress);
+                    }).start();
 
                 } else if (messageMap.keySet().contains("peers")) {
-                    Type stringSetTypeType = new TypeToken<Map<String, Set<Node>>>() {
+                    LOGGER.info("Received peer " + nodeAddress + " connected peers list");
+                    Type stringSetTypeType = new TypeToken<Map<String, Set<Integer>>>() {
                     }.getType();
-                    Map<String, Set<Node>> peersMap = gson.fromJson(message, stringSetTypeType);
-                    Set<Node> peers = peersMap.get("peers");
-                    new Thread(() -> {
-
-                    });
+                    Map<String, Set<Integer>> peersMap = gson.fromJson(message, stringSetTypeType);
+                    Set<Integer> newPeersAddresses = peersMap.get("peers");
+                    newPeersAddresses.removeAll(peersAddresses);
+                    for (Integer newPeerAddress : newPeersAddresses) {
+                        peersAddresses.add(newPeerAddress);
+                        nodeClient.connectToPeer(newPeerAddress);
+                        nodeClient.sendMyAddressToPeer(newPeerAddress);
+                    }
                 }
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            System.out.println("Bye from serverThread handling " + skt.getPort());
+            LOGGER.info("Bye from ServerThread handling communication with peer " + nodeAddress);
         }
 
     }
