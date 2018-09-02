@@ -13,17 +13,13 @@ public final class Wallet {
 
     public static final Wallet wallet = new Wallet();
 
-    public PrivateKey privateKey;
-    public PublicKey publicKey;
-    public String address;
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
+    private String address;
 
     private Wallet() {
         generateKeyPair();
         address = sha160(this.publicKey.toString());
-    }
-
-    public static Wallet getSharedInstance() {
-        return wallet;
     }
 
     private void generateKeyPair() {
@@ -40,6 +36,10 @@ public final class Wallet {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static Wallet getSharedInstance() {
+        return wallet;
     }
 
     public float getBalance() {
@@ -83,5 +83,7 @@ public final class Wallet {
         return newTransaction;
     }
 
-
+    public String getAddress() {
+        return address;
+    }
 }

@@ -1,11 +1,12 @@
 package com.atypon.training.java.traniningproject;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static com.atypon.training.java.traniningproject.Utility.*;
 
@@ -14,27 +15,17 @@ public final class Transaction {
 
 
     private static int sequence = 0;
-    public String transactionId;
 
-    @JsonIgnore
-    public PublicKey sender;
+    public transient PublicKey sender;
+    private String transactionId;
     public String recipientAddress;
     public float amount;
     public byte[] signature;
-    public ArrayList<TransactionInput> inputs = new ArrayList<>();
-    public ArrayList<TransactionOutput> outputs = new ArrayList<>();
+    private ArrayList<TransactionInput> inputs = new ArrayList<>();
+    private ArrayList<TransactionOutput> outputs = new ArrayList<>();
 
-    @JsonIgnore
-    private boolean signatureWasGenerated = false;
+    private transient boolean signatureWasGenerated = false;
 
-
-    //For Coinbase transaction use
-    public Transaction(PublicKey recipient) {
-        this.sender = null;
-        this.recipientAddress = recipientAddress;
-        this.amount = 100f;
-        this.inputs = null;
-    }
 
     public Transaction(PublicKey sender, String recipientAddress, float amount, ArrayList<TransactionInput> inputs) {
         this.sender = sender;
@@ -111,6 +102,18 @@ public final class Transaction {
         return total;
     }
 
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public ArrayList<TransactionInput> getInputs() {
+        return inputs;
+    }
+
+    public ArrayList<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
     public void generateSignature(PrivateKey privateKey) {
         String data;
         data = getStringFromKey(sender) + recipientAddress + amount;
@@ -130,13 +133,41 @@ public final class Transaction {
 
     private String generateTransactionHash() {
         ++sequence;
-        String hash = sha256(getStringFromKey(sender) + recipientAddress
-                + amount + sequence);
+        String hash = sha256(this.toString() + sequence);
         return hash;
     }
 
     @Override
     public String toString() {
-        return getStringFromKey(sender) + "  " + "To: " + recipientAddress + "  " + "Amount: " + amount;
+        return "Transaction{" +
+                "transactionId='" + transactionId + '\'' +
+                ", recipientAddress='" + recipientAddress + '\'' +
+                ", amount=" + amount +
+                ", signature=" + Arrays.toString(signature) +
+                ", inputs=" + inputs +
+                ", outputs=" + outputs +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return Float.compare(that.amount, amount) == 0 &&
+                signatureWasGenerated == that.signatureWasGenerated &&
+                Objects.equals(transactionId, that.transactionId) &&
+                Objects.equals(sender, that.sender) &&
+                Objects.equals(recipientAddress, that.recipientAddress) &&
+                Arrays.equals(signature, that.signature) &&
+                Objects.equals(inputs, that.inputs) &&
+                Objects.equals(outputs, that.outputs);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(transactionId, sender, recipientAddress, amount, inputs, outputs, signatureWasGenerated);
+        result = 31 * result + Arrays.hashCode(signature);
+        return result;
     }
 }

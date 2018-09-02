@@ -2,27 +2,21 @@ package com.atypon.training.java.traniningproject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.Setter;
+
+import java.util.Objects;
 
 import static com.atypon.training.java.traniningproject.Utility.sha256;
 
 @JsonIgnoreProperties
-public class TransactionOutput {
+public final class TransactionOutput {
 
-    @JsonIgnore
-    static int number = 0; // used to guarantee unique id for coinbase transaction output
-    @Setter
-    @Getter
+    static transient int number = 0; // used to guarantee unique id for coinbase transaction output
+
     private String id;
-    @Setter
-    @Getter
     private String recipientAddress;
-    @Setter
-    @Getter
     private float amount;
+
     // The id of the transaction where this output was generated
-    @JsonIgnore
     private String parentTransactionId;
 
     public TransactionOutput(String recipientAddress, float amount, String parentTransactionId) {
@@ -32,6 +26,7 @@ public class TransactionOutput {
         this.id = sha256(recipientAddress + amount + parentTransactionId);
     }
 
+    // For coinbase Transaction use
     public TransactionOutput(String recipientAddress, float amount) {
         this.recipientAddress = recipientAddress;
         this.amount = amount;
@@ -67,5 +62,31 @@ public class TransactionOutput {
     @JsonIgnore
     public boolean isMine(String address) {
         return (address.equals(recipientAddress));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionOutput that = (TransactionOutput) o;
+        return Float.compare(that.amount, amount) == 0 &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(recipientAddress, that.recipientAddress) &&
+                Objects.equals(parentTransactionId, that.parentTransactionId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, recipientAddress, amount, parentTransactionId);
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionOutput{" +
+                "id='" + id + '\'' +
+                ", recipientAddress='" + recipientAddress + '\'' +
+                ", amount=" + amount +
+                ", parentTransactionId='" + parentTransactionId + '\'' +
+                '}';
     }
 }

@@ -1,43 +1,25 @@
 package com.atypon.training.java.traniningproject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 
 @JsonIgnoreProperties
 public final class Block {
 
-    static int blockCounter = -1;
 
-    @Setter
-    @Getter
     private int index;
-    @Setter
-    @Getter
     private Long timestamp;
-    @Setter
-    @Getter
     private int nonce;
-    @Setter
-    @Getter
     private String previousBlockHash;
-    @Setter
-    @Getter
     private ArrayList<Transaction> transactions;
-
-    @Getter
-    @Setter
     private Coinbase coinbase;
 
-    public Block() {
-    }
-
     public Block(String previousBlockHash, Coinbase coinbase, ArrayList<Transaction> transactions) {
-        this.index = ++blockCounter;
+        this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
@@ -53,6 +35,26 @@ public final class Block {
         return previousBlockHash;
     }
 
+    public Long getTimestamp() {
+        return timestamp;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public int getNonce() {
+        return nonce;
+    }
+
+    public ArrayList<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public Coinbase getCoinbase() {
+        return coinbase;
+    }
+
     public void mine(int difficulty) {
         //Create a string with (difficulty * "0")
         String target = Utility.repeat("0", difficulty);
@@ -63,6 +65,31 @@ public final class Block {
 
     @Override
     public String toString() {
-        return index + timestamp.toString() + nonce + previousBlockHash + transactions;
+        return "Block{" +
+                "index=" + index +
+                ", timestamp=" + timestamp +
+                ", nonce=" + nonce +
+                ", previousBlockHash='" + previousBlockHash + '\'' +
+                ", transactions=" + transactions +
+                ", coinbase=" + coinbase +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Block block = (Block) o;
+        return index == block.index &&
+                nonce == block.nonce &&
+                Objects.equals(timestamp, block.timestamp) &&
+                Objects.equals(previousBlockHash, block.previousBlockHash) &&
+                Objects.equals(transactions, block.transactions) &&
+                Objects.equals(coinbase, block.coinbase);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(index, timestamp, nonce, previousBlockHash, transactions, coinbase);
     }
 }

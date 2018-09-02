@@ -1,10 +1,10 @@
-package com.atypon.training.java.traniningproject.internodecommunication;
+package com.atypon.training.java.traniningproject.p2p;
 
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
-public class Connection {
+public final class Connection {
 
     private Socket socket;
     private Integer peerAddress;
@@ -20,7 +20,7 @@ public class Connection {
         return peerAddress;
     }
 
-    public PrintWriter getOutToPeer() {
+    public PrintWriter getOutToPeerStream() {
         return outToPeer;
     }
 

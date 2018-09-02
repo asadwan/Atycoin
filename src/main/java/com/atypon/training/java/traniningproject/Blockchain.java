@@ -1,16 +1,11 @@
 package com.atypon.training.java.traniningproject;
 
-import com.atypon.training.java.traniningproject.internodecommunication.Node;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Logger;
-
-import static com.atypon.training.java.traniningproject.Utility.sha256;
 
 @JsonIgnoreProperties
 public final class Blockchain {
@@ -25,7 +20,6 @@ public final class Blockchain {
     public static HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
     private ArrayList<Block> chain = new ArrayList<>();
     private ArrayList<Transaction> mempool = new ArrayList<>();
-    private Set<Node> network = new HashSet<>();
 
     // Singlton
     public static Blockchain getSharedInstance() {
@@ -41,7 +35,7 @@ public final class Blockchain {
 
     public void createGenesisBlock() {
         String genesisBlockPreviousHash = Utility.repeat("0", 64);
-        addBlock(genesisBlockPreviousHash);
+        mineBlock(genesisBlockPreviousHash);
     }
 
     public ArrayList<Block> getBlocks() {
@@ -62,15 +56,16 @@ public final class Blockchain {
         Block previousBlock = getPreviousBlock();
         if (!block.getPreviousBlockHash().equalsIgnoreCase(previousBlock.getHash())) return false;
         String target = Utility.repeat("0", difficulty);
-        return !block.getHash().startsWith(target);
+        boolean isPoWValid = block.getHash().startsWith(target);
+        return isPoWValid;
     }
 
     public int getLength() {
         return chain.size();
     }
 
-    public Block addBlock(String previousHash) {
-        Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().address);
+    public Block mineBlock(String previousHash) {
+        Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().getAddress());
         UTXOs.put(coinbase.getBlockReward().getId(), coinbase.getBlockReward());
         Block block = new Block(previousHash, coinbase, mempool);
         block.mine(difficulty);
@@ -82,11 +77,6 @@ public final class Blockchain {
     @JsonIgnore
     public Block getPreviousBlock() {
         return chain.get(chain.size() - 1);
-    }
-
-    public String calculateHash(Block block) {
-        String hash = sha256(block.toString());
-        return hash;
     }
 
     public boolean isChainValid(ArrayList<Block> chain) {
@@ -112,25 +102,58 @@ public final class Blockchain {
         this.mempool.add(transaction);
     }
 
-    public void addNode(Node node) {
-        this.network.add(node);
+    public boolean replaceChain(ArrayList<Block> otherChain, Integer fromPeer) {
+        if ((otherChain.size() == this.chain.size() && isOtherChainOlderThanMyChain(otherChain))
+                || otherChain.size() > this.chain.size()) {
+            this.chain.clear();
+            this.chain.addAll(otherChain);
+            updateUTXOsList(otherChain);
+            updateMempool(otherChain);
+            return true;
+        }
+        return false;
     }
 
-    /**
-     public void replaceChain() {
-     ArrayList<Block> longestChain = this.chain;
-     int maxLength = this.chain.size();
-     RestTemplate restTemplate = new RestTemplate();
-     for (Node node : network) {
-     System.out.println(node.getAddress().toString() + "/get_chain");
-     Blockchain nodeBlockchain = restTemplate.getForObject(node.getAddress().toString() + "/get_chain",
-     Blockchain.class);
-     System.out.println(nodeBlockchain.getLength());
-     if (nodeBlockchain.getLength() > maxLength && isChainValid(nodeBlockchain.chain)) {
-     longestChain = nodeBlockchain.chain;
-     }
-     }
-     this.chain = longestChain;
-     }
-     **/
+    private boolean isOtherChainOlderThanMyChain(ArrayList<Block> otherChain) {
+        Long otherChainLastBlockTimeStamp = otherChain.get(otherChain.size() - 1).getTimestamp();
+        Long myChainLastBlockTimestamp = getPreviousBlock().getTimestamp();
+        return (otherChainLastBlockTimeStamp < myChainLastBlockTimestamp);
+    }
+
+    public void updateUTXOsList(ArrayList<Block> otherChain) {
+        UTXOs.clear();
+        for (Block block : otherChain) {
+            TransactionOutput coinbaseTx = block.getCoinbase().getBlockReward();
+            for (Transaction transaction : block.getTransactions()) {
+                removeSTXOsFromUTXOList(transaction.getInputs());
+                addUTXOsToUTXOsList(transaction.getOutputs());
+            }
+            UTXOs.put(coinbaseTx.getId(), coinbaseTx);
+        }
+    }
+
+    public void removeSTXOsFromUTXOList(ArrayList<TransactionInput> transactionInputs) {
+        for (TransactionInput transactionInput : transactionInputs) {
+            UTXOs.remove(transactionInput.getTransactionOutputId());
+        }
+    }
+
+    public void addUTXOsToUTXOsList(ArrayList<TransactionOutput> transactionOutputs) {
+        for (TransactionOutput transactionOutput : transactionOutputs) {
+            UTXOs.put(transactionOutput.getId(), transactionOutput);
+        }
+    }
+
+    private void updateMempool(ArrayList<Block> otherChain) {
+        for (Block block : chain) {
+            removeTransactionsFromMempool(block);
+        }
+    }
+
+    private void removeTransactionsFromMempool(Block block) {
+        for (Transaction transaction : block.getTransactions()) {
+            mempool.removeIf(trx -> trx.getTransactionId().equals(transaction.getTransactionId()));
+        }
+    }
+
 }

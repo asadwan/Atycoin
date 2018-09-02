@@ -110,7 +110,7 @@ public final class Utility {
 
         List<String> previousTreeLayer = new ArrayList<String>();
         for (Transaction transaction : transactions) {
-            previousTreeLayer.add(transaction.transactionId);
+            previousTreeLayer.add(transaction.getTransactionId());
         }
         List<String> treeLayer = previousTreeLayer;
 

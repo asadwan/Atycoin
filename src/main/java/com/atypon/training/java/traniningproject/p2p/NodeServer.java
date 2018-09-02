@@ -1,15 +1,14 @@
-package com.atypon.training.java.traniningproject.internodecommunication;
+package com.atypon.training.java.traniningproject.p2p;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.logging.Logger;
 
-public class NodeServer extends Thread {
+public final class NodeServer extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
+
     private static volatile NodeServer INSTANCE = null;
     private int nodeServerPort = Node.getSharedInstance().getPort();
     private ServerSocket server = null;
@@ -31,12 +30,17 @@ public class NodeServer extends Thread {
             server = new ServerSocket(nodeServerPort);
             while (true) {
                 Socket skt = server.accept();
-                BufferedReader inputFromPeer = new BufferedReader(new InputStreamReader(skt.getInputStream()));
-                Thread serverThread = new Thread(new NodeServerThread(skt, inputFromPeer));
+                Thread serverThread = new Thread(new NodeServerThread(skt));
                 serverThread.start();
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                server.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
