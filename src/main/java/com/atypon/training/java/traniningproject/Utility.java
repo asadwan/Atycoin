@@ -1,6 +1,7 @@
 package com.atypon.training.java.traniningproject;
 
 import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -77,12 +78,12 @@ public final class Utility {
      * if signature valid otherwise returns false
      */
     public static boolean verifyECDSASignuture(PublicKey publicKey, byte[] signature, String data) {
-        boolean verify = false;
+        boolean verified = false;
         try {
             Signature dsaSignature = Signature.getInstance("ECDSA", "BC");
             dsaSignature.initVerify(publicKey);
             dsaSignature.update(data.getBytes());
-            verify = dsaSignature.verify(signature);
+            verified = dsaSignature.verify(signature);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (SignatureException e) {
@@ -92,19 +93,38 @@ public final class Utility {
         } catch (InvalidKeyException e) {
             e.printStackTrace();
         }
-        return verify;
+        return verified;
     }
 
     /**
      * return a string representation of the key
      */
-    public static String getStringFromKey(Key key) {
-        return Base64.getEncoder().encodeToString(key.getEncoded());
+
+    public static String getStringFromPublicKey(PublicKey publicKey) {
+        try {
+            KeyFactory fact = KeyFactory.getInstance("ECDSA");
+            X509EncodedKeySpec spec = fact.getKeySpec(publicKey, X509EncodedKeySpec.class);
+            return Base64.getEncoder().encodeToString(spec.getEncoded());
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public static PublicKey getPublicKeyFromString(String publicKeyString) {
+        try {
+            byte[] data = Base64.getDecoder().decode(publicKeyString.getBytes());
+            X509EncodedKeySpec spec = new X509EncodedKeySpec(data);
+            KeyFactory fact = KeyFactory.getInstance("ECDSA");
+            return fact.generatePublic(spec);
+        } catch (Exception e) {
+            throw new RuntimeException();
+        }
     }
 
     /**
      *
      */
+
     public static String getMerkleRoot(ArrayList<Transaction> transactions) {
         int count = transactions.size();
 

@@ -3,6 +3,7 @@ package com.atypon.training.java.traniningproject;
 import com.atypon.training.java.traniningproject.p2p.Node;
 import com.atypon.training.java.traniningproject.p2p.NodeClient;
 import com.atypon.training.java.traniningproject.p2p.NodeServer;
+import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,7 @@ public class AtycoinRESTfulAPI {
 
     private static Blockchain blockchain;
     private static Wallet wallet;
+    private static Gson gson = new Gson();
 
     static {
         //Setup Bouncey castle as a Security Provider
@@ -58,22 +60,18 @@ public class AtycoinRESTfulAPI {
 
     @RequestMapping(value = "get_utxo_list", method = GET, produces = "application/json")
     public static Map<String, TransactionOutput> getUTXOList() {
-        return Blockchain.UTXOs;
+        return blockchain.getUTXOs();
     }
 
     @RequestMapping(value = "send_coin", method = POST, produces = "application/json")
     public static Transaction sendCoin(@RequestBody HashMap<String, String> responseBodyJson) {
         float amount = Float.parseFloat(responseBodyJson.get("amount"));
         String recipient = responseBodyJson.get("recipient");
-        Transaction transaction = Wallet.getSharedInstance().sendCoin(recipient, amount);
-        boolean success = transaction.processTransaction();
-        if (success) {
-            blockchain.addTransaction(transaction);
-            NodeClient.getSharedInstance().broadcastNewTransaction(transaction);
-            return transaction;
-        } else {
-            return new Transaction();
-        }
+        Transaction transaction = wallet.sendCoin(recipient, amount);
+        if (transaction == null) return new NullTransaction();
+        blockchain.addTransaction(transaction);
+        NodeClient.getSharedInstance().broadcastNewTransaction(transaction);
+        return transaction;
     }
 
     @RequestMapping(value = "get_connected_peers", method = GET, produces = "application/json")

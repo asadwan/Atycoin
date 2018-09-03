@@ -10,11 +10,9 @@ public final class TransactionInput {
     private String transactionOutputId;
     private TransactionOutput UTXO;
 
-    public TransactionInput(String transactionOutputId) {
+    public TransactionInput(String transactionOutputId, TransactionOutput UTXO) {
         this.transactionOutputId = transactionOutputId;
-    }
-
-    public TransactionInput() {
+        this.UTXO = UTXO;
     }
 
     public String getTransactionOutputId() {
@@ -23,10 +21,6 @@ public final class TransactionInput {
 
     public TransactionOutput getUTXO() {
         return UTXO;
-    }
-
-    public void setUTXO(TransactionOutput UTXO) {
-        this.UTXO = UTXO;
     }
 
     @Override

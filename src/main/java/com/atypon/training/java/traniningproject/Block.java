@@ -2,8 +2,8 @@ package com.atypon.training.java.traniningproject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -15,15 +15,15 @@ public final class Block {
     private Long timestamp;
     private int nonce;
     private String previousBlockHash;
-    private ArrayList<Transaction> transactions;
+    private List<Transaction> transactions;
     private Coinbase coinbase;
 
-    public Block(String previousBlockHash, Coinbase coinbase, ArrayList<Transaction> transactions) {
+    public Block(String previousBlockHash, Coinbase coinbase, List<Transaction> transactions) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
-        this.transactions = (ArrayList<Transaction>) transactions.clone();
+        this.transactions = transactions;
     }
 
     public String getHash() {
@@ -47,7 +47,7 @@ public final class Block {
         return nonce;
     }
 
-    public ArrayList<Transaction> getTransactions() {
+    public List<Transaction> getTransactions() {
         return transactions;
     }
 

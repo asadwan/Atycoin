@@ -33,7 +33,6 @@ public final class TransactionOutput {
         this.id = sha256(recipientAddress + amount + number++);
     }
 
-
     public String getId() {
         return id;
     }
@@ -56,6 +55,10 @@ public final class TransactionOutput {
 
     public void setAmount(float amount) {
         this.amount = amount;
+    }
+
+    public boolean isUnspent() {
+        return Blockchain.getSharedInstance().getUTXOs().containsKey(this.id);
     }
 
     // Checks whether this coin belongs to this public key owner

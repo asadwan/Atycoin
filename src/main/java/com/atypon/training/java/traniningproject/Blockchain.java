@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 
 @JsonIgnoreProperties
@@ -15,11 +17,12 @@ public final class Blockchain {
     // Singlton
     private static volatile Blockchain INSTANCE = new Blockchain();
 
-    public static float minimumTransaction = 0.1f;
     public static int difficulty = 5;
-    public static HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
+
+    private HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
     private ArrayList<Block> chain = new ArrayList<>();
-    private ArrayList<Transaction> mempool = new ArrayList<>();
+
+    private List<Transaction> mempool = Collections.synchronizedList(new ArrayList<>());
 
     // Singlton
     public static Blockchain getSharedInstance() {
@@ -43,13 +46,13 @@ public final class Blockchain {
     }
 
     public void addBlock(Block block) {
-        if (isBlockValid(block)) {
-            chain.add(block);
-            LOGGER.info("A new block has been added to the chain");
+        if (!isBlockValid(block)) {
+            LOGGER.info("A new block received has been found " + "invalid and was not added to the chain");
             return;
         }
-        LOGGER.info("A new block received has been found " +
-                "invalid and was not added to the chain");
+        chain.add(block);
+        updateUTXOsListOnAddBlock(block);
+        LOGGER.info("A new block has been added to the chain");
     }
 
     private boolean isBlockValid(Block block) {
@@ -64,14 +67,35 @@ public final class Blockchain {
         return chain.size();
     }
 
+    @JsonIgnore
+    public HashMap<String, TransactionOutput> getUTXOs() {
+        return UTXOs;
+    }
+
     public Block mineBlock(String previousHash) {
         Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().getAddress());
         UTXOs.put(coinbase.getBlockReward().getId(), coinbase.getBlockReward());
-        Block block = new Block(previousHash, coinbase, mempool);
+        List<Transaction> pickedTransactions = pickTransactionsForNextBlock();
+        Block block = new Block(previousHash, coinbase, pickedTransactions);
         block.mine(difficulty);
-        mempool.clear();
         chain.add(block);
+        updateUTXOsListOnAddBlock(block);
         return block;
+    }
+
+    private List<Transaction> pickTransactionsForNextBlock() {
+        List<Transaction> pickedTransactions = new ArrayList<Transaction>();
+        for (Transaction transaction : mempool) {
+            if (transaction.isTransactionValid()) {
+                pickedTransactions.add(transaction);
+                //mempool.removeIf(trx -> transaction == trx);
+            } else {
+                LOGGER.info("Transaction " + transaction.getTransactionId() + " has been found invalid" +
+                        "and was discarded and will not be included in block " + (chain.size() + 1));
+            }
+        }
+        mempool.clear();
+        return pickedTransactions;
     }
 
     @JsonIgnore
@@ -107,7 +131,7 @@ public final class Blockchain {
                 || otherChain.size() > this.chain.size()) {
             this.chain.clear();
             this.chain.addAll(otherChain);
-            updateUTXOsList(otherChain);
+            updateUTXOsListOnReplaceChain(otherChain);
             updateMempool(otherChain);
             return true;
         }
@@ -120,15 +144,19 @@ public final class Blockchain {
         return (otherChainLastBlockTimeStamp < myChainLastBlockTimestamp);
     }
 
-    public void updateUTXOsList(ArrayList<Block> otherChain) {
+    public void updateUTXOsListOnReplaceChain(ArrayList<Block> otherChain) {
         UTXOs.clear();
         for (Block block : otherChain) {
             TransactionOutput coinbaseTx = block.getCoinbase().getBlockReward();
-            for (Transaction transaction : block.getTransactions()) {
-                removeSTXOsFromUTXOList(transaction.getInputs());
-                addUTXOsToUTXOsList(transaction.getOutputs());
-            }
+            updateUTXOsListOnAddBlock(block);
             UTXOs.put(coinbaseTx.getId(), coinbaseTx);
+        }
+    }
+
+    public void updateUTXOsListOnAddBlock(Block block) {
+        for (Transaction transaction : block.getTransactions()) {
+            removeSTXOsFromUTXOList(transaction.getInputs());
+            addUTXOsToUTXOsList(transaction.getOutputs());
         }
     }
 

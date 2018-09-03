@@ -108,8 +108,6 @@ public final class NodeServerThread implements Runnable {
         Map<String, Transaction> transactionMap = gson.fromJson(message, stringTransactionMapType);
         Transaction transaction = transactionMap.get("transaction");
         blockchain.addTransaction(transaction);
-        blockchain.removeSTXOsFromUTXOList(transaction.getInputs());
-        blockchain.addUTXOsToUTXOsList(transaction.getOutputs());
         LOGGER.info("A new transaction recieved from peer " + peerAddress +
                 " has been added to the mempool ");
     }
