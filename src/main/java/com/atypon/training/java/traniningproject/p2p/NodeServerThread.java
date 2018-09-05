@@ -1,8 +1,9 @@
 package com.atypon.training.java.traniningproject.p2p;
 
-import com.atypon.training.java.traniningproject.Block;
-import com.atypon.training.java.traniningproject.Blockchain;
-import com.atypon.training.java.traniningproject.Transaction;
+import com.atypon.training.java.traniningproject.blockchain_core.Block;
+import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
+import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
+import com.atypon.training.java.traniningproject.transactions_system.Transaction;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -103,11 +104,11 @@ public final class NodeServerThread implements Runnable {
 
     private void handleNewTransactionMessage() {
         LOGGER.info("A new transaction has been received from  " + peerAddress);
-        Type stringTransactionMapType = new TypeToken<Map<String, Transaction>>() {
+        Type stringTransactionMapType = new TypeToken<Map<String, AtycoinTransaction>>() {
         }.getType();
         Map<String, Transaction> transactionMap = gson.fromJson(message, stringTransactionMapType);
         Transaction transaction = transactionMap.get("transaction");
-        blockchain.addTransaction(transaction);
+        blockchain.addTransaction((AtycoinTransaction) transaction);
         LOGGER.info("A new transaction recieved from peer " + peerAddress +
                 " has been added to the mempool ");
     }

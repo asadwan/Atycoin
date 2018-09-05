@@ -1,4 +1,4 @@
-import com.atypon.training.java.traniningproject.Block;
+import com.atypon.training.java.traniningproject.blockchain_core.Block;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -1,10 +1,15 @@
-package com.atypon.training.java.traniningproject;
+package com.atypon.training.java.traniningproject.blockchain_core;
 
+import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
+import com.atypon.training.java.traniningproject.transactions_system.Coinbase;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+
+import static com.atypon.training.java.traniningproject.utility.Utility.repeat;
+import static com.atypon.training.java.traniningproject.utility.Utility.sha256;
 
 
 @JsonIgnoreProperties
@@ -15,10 +20,10 @@ public final class Block {
     private Long timestamp;
     private int nonce;
     private String previousBlockHash;
-    private List<Transaction> transactions;
+    private List<AtycoinTransaction> transactions;
     private Coinbase coinbase;
 
-    public Block(String previousBlockHash, Coinbase coinbase, List<Transaction> transactions) {
+    public Block(String previousBlockHash, Coinbase coinbase, List<AtycoinTransaction> transactions) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
@@ -27,7 +32,7 @@ public final class Block {
     }
 
     public String getHash() {
-        String hash = Utility.sha256(this.toString()).toUpperCase();
+        String hash = sha256(this.toString()).toUpperCase();
         return hash;
     }
 
@@ -47,7 +52,7 @@ public final class Block {
         return nonce;
     }
 
-    public List<Transaction> getTransactions() {
+    public List<AtycoinTransaction> getTransactions() {
         return transactions;
     }
 
@@ -57,7 +62,7 @@ public final class Block {
 
     public void mine(int difficulty) {
         //Create a string with (difficulty * "0")
-        String target = Utility.repeat("0", difficulty);
+        String target = repeat("0", difficulty);
         while (!getHash().startsWith(target)) {
             nonce++;
         }

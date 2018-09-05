@@ -1,5 +1,6 @@
 package com.atypon.training.java.traniningproject.p2p;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
@@ -10,10 +11,14 @@ public final class Connection {
     private Integer peerAddress;
     private PrintWriter outToPeer;
 
-    public Connection(Socket socket, Integer peerAddress, PrintWriter outToPeer) {
+    public Connection(Socket socket, Integer peerAddress) {
         this.socket = socket;
         this.peerAddress = peerAddress;
-        this.outToPeer = outToPeer;
+        try {
+            this.outToPeer = new PrintWriter(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public Integer getPeerAddress() {

@@ -1,8 +1,8 @@
 package com.atypon.training.java.traniningproject.p2p;
 
-import com.atypon.training.java.traniningproject.Block;
-import com.atypon.training.java.traniningproject.Blockchain;
-import com.atypon.training.java.traniningproject.Transaction;
+import com.atypon.training.java.traniningproject.blockchain_core.Block;
+import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
+import com.atypon.training.java.traniningproject.transactions_system.Transaction;
 import com.google.gson.Gson;
 
 import java.io.*;
@@ -73,8 +73,7 @@ public final class NodeClient {
         if (peerAddress.equals(Node.getSharedInstance().getPort())) return;
         try {
             Socket socket = new Socket("localhost", peerAddress);
-            PrintWriter pw = new PrintWriter(socket.getOutputStream());
-            Connection connection = new Connection(socket, peerAddress, pw);
+            Connection connection = new Connection(socket, peerAddress);
             peersConnections.add(connection);
             LOGGER.info("An outgoing connection to peer '" + peerAddress + "' has been established");
         } catch (IOException e) {

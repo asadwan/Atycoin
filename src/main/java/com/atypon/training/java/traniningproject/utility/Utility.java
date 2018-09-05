@@ -1,4 +1,6 @@
-package com.atypon.training.java.traniningproject;
+package com.atypon.training.java.traniningproject.utility;
+
+import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
 
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
@@ -125,11 +127,11 @@ public final class Utility {
      *
      */
 
-    public static String getMerkleRoot(ArrayList<Transaction> transactions) {
+    public static String getMerkleRoot(ArrayList<AtycoinTransaction> transactions) {
         int count = transactions.size();
 
         List<String> previousTreeLayer = new ArrayList<String>();
-        for (Transaction transaction : transactions) {
+        for (AtycoinTransaction transaction : transactions) {
             previousTreeLayer.add(transaction.getTransactionId());
         }
         List<String> treeLayer = previousTreeLayer;

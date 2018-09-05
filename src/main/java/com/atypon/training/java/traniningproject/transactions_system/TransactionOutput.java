@@ -1,11 +1,12 @@
-package com.atypon.training.java.traniningproject;
+package com.atypon.training.java.traniningproject.transactions_system;
 
+import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Objects;
 
-import static com.atypon.training.java.traniningproject.Utility.sha256;
+import static com.atypon.training.java.traniningproject.utility.Utility.sha256;
 
 @JsonIgnoreProperties
 public final class TransactionOutput {
@@ -26,7 +27,7 @@ public final class TransactionOutput {
         this.id = sha256(recipientAddress + amount + parentTransactionId);
     }
 
-    // For coinbase Transaction use
+    // For coinbase AtycoinTransaction use
     public TransactionOutput(String recipientAddress, float amount) {
         this.recipientAddress = recipientAddress;
         this.amount = amount;

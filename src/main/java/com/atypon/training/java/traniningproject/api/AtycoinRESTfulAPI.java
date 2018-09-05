@@ -1,16 +1,14 @@
-package com.atypon.training.java.traniningproject;
+package com.atypon.training.java.traniningproject.api;
 
+import com.atypon.training.java.traniningproject.blockchain_core.Block;
+import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
 import com.atypon.training.java.traniningproject.p2p.Node;
 import com.atypon.training.java.traniningproject.p2p.NodeClient;
-import com.atypon.training.java.traniningproject.p2p.NodeServer;
-import com.google.gson.Gson;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.atypon.training.java.traniningproject.transactions_system.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,18 +16,11 @@ import java.util.Set;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-@SpringBootApplication
 @RestController
 public class AtycoinRESTfulAPI {
 
-    private static Blockchain blockchain;
-    private static Wallet wallet;
-    private static Gson gson = new Gson();
-
-    static {
-        //Setup Bouncey castle as a Security Provider
-        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-    }
+    private static Blockchain blockchain = Blockchain.getSharedInstance();
+    private static Wallet wallet = Wallet.getSharedInstance();
 
     @RequestMapping(value = "/mine_block", method = GET, produces = "application/json")
     public static Block mineBlock() {
@@ -63,13 +54,18 @@ public class AtycoinRESTfulAPI {
         return blockchain.getUTXOs();
     }
 
+    @RequestMapping(value = "get_local_utxo_list", method = GET, produces = "application/json")
+    public static Map<String, TransactionOutput> getLocalUTXOList() {
+        return Wallet.getSharedInstance().localUTXOs;
+    }
+
     @RequestMapping(value = "send_coin", method = POST, produces = "application/json")
     public static Transaction sendCoin(@RequestBody HashMap<String, String> responseBodyJson) {
         float amount = Float.parseFloat(responseBodyJson.get("amount"));
         String recipient = responseBodyJson.get("recipient");
         Transaction transaction = wallet.sendCoin(recipient, amount);
-        if (transaction == null) return new NullTransaction();
-        blockchain.addTransaction(transaction);
+        if (transaction instanceof NullTransaction) return new NullTransaction();
+        blockchain.addTransaction((AtycoinTransaction) transaction);
         NodeClient.getSharedInstance().broadcastNewTransaction(transaction);
         return transaction;
     }
@@ -87,12 +83,4 @@ public class AtycoinRESTfulAPI {
         return response;
     }
 
-    public static void main(String[] args) {
-        blockchain = Blockchain.getSharedInstance();
-        blockchain.createGenesisBlock();
-        NodeServer.getSharedInstance().start();
-        NodeClient.getSharedInstance().start();
-        wallet = Wallet.getSharedInstance();
-        SpringApplication.run(AtycoinRESTfulAPI.class, args);
-    }
 }

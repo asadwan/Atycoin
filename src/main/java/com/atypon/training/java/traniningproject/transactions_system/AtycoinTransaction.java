@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject;
+package com.atypon.training.java.traniningproject.transactions_system;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,12 +10,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Logger;
 
-import static com.atypon.training.java.traniningproject.Utility.*;
+import static com.atypon.training.java.traniningproject.utility.Utility.*;
 
 @JsonIgnoreProperties
-public class Transaction {
+public final class AtycoinTransaction implements Transaction {
 
-    private transient final Logger LOGGER = Logger.getLogger(Transaction.class.getName());
+    private transient final Logger LOGGER = Logger.getLogger(AtycoinTransaction.class.getName());
 
     private static int sequence = 0;
 
@@ -29,21 +29,19 @@ public class Transaction {
     private ArrayList<TransactionOutput> outputs = new ArrayList<>();
 
 
-    public Transaction(PublicKey senderPublicKey, String recipientAddress,
-                       float amount, ArrayList<TransactionInput> inputs) {
+    public AtycoinTransaction(PublicKey senderPublicKey, String recipientAddress,
+                              float amount, ArrayList<TransactionInput> inputs) {
         this.senderPublicKeyString = getStringFromPublicKey(senderPublicKey);
         this.recipientAddress = recipientAddress;
         this.amount = amount;
         this.inputs = inputs;
     }
 
-    public Transaction() {
-    }
-
+    @Override
     public void processTransaction() {
         generateOutputs();
-        Blockchain.getSharedInstance().addUTXOsToUTXOsList(outputs);
-        Blockchain.getSharedInstance().removeSTXOsFromUTXOList(inputs);
+        Wallet.getSharedInstance().addUTXOsToLocalUTXOsList(outputs);
+        Wallet.getSharedInstance().removeSTXOsFromLocalUTXOList(inputs);
     }
 
     private void generateOutputs() {
@@ -63,7 +61,7 @@ public class Transaction {
         float total = 0;
         for (TransactionInput input : inputs) {
             if (input.getUTXO() == null)
-                continue; //if Transaction can't be found skip it, This behavior may not be optimal.
+                continue; //if AtycoinTransaction can't be found skip it, This behavior may not be optimal.
             total += input.getUTXO().getAmount();
         }
         return total;
@@ -105,19 +103,19 @@ public class Transaction {
         return outputs;
     }
 
+    @Override
     public void generateSignature(PrivateKey privateKey) {
-        signature = applyECDSASignuture(privateKey, transactionId);
+        signature = applyECDSASignuture(privateKey, this.toString());
     }
 
     public boolean isSignatureValid() {
         PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
-        return verifyECDSASignuture(senderPublicKey, signature, transactionId);
+        return verifyECDSASignuture(senderPublicKey, signature, this.toString());
     }
 
     @JsonIgnore
     public boolean isTransactionValid() {
-        if (!isSignatureValid()) return false;
-        return areInputsValid();
+        return areInputsValid() && isSignatureValid();
     }
 
     @JsonIgnore
@@ -143,11 +141,10 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{" +
+        return "AtycoinTransaction{" +
                 "transactionId='" + transactionId + '\'' +
                 ", recipientAddress='" + recipientAddress + '\'' +
                 ", amount=" + amount +
-                ", signature=" + Arrays.toString(signature) +
                 ", inputs=" + inputs +
                 ", outputs=" + outputs +
                 '}';
@@ -157,7 +154,7 @@ public class Transaction {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Transaction that = (Transaction) o;
+        AtycoinTransaction that = (AtycoinTransaction) o;
         return Float.compare(that.amount, amount) == 0 &&
                 Objects.equals(transactionId, that.transactionId) &&
                 Objects.equals(senderPublicKeyString, that.senderPublicKeyString) &&

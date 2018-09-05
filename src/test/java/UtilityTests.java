@@ -1,4 +1,4 @@
-import com.atypon.training.java.traniningproject.Wallet;
+import com.atypon.training.java.traniningproject.transactions_system.Wallet;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,11 +20,11 @@ public class UtilityTests {
 
     @Test
     public void testPublicKeyToStringAndStringToPublicKeyIsWorking() {
-        //signture = Utility.applyECDSASignuture(wallet.privateKey, str);
+        //signture = utility.applyECDSASignuture(wallet.privateKey, str);
 
-        //String publicKeyString = Utility.getStringFromPublicKey(wallet.publicKey);
-        //PublicKey publicKey = Utility.getPublicKeyFromString(publicKeyString);
+        //String publicKeyString = utility.getStringFromPublicKey(wallet.publicKey);
+        //PublicKey publicKey = utility.getPublicKeyFromString(publicKeyString);
 
-        //assertTrue(Utility.verifyECDSASignuture(publicKey,signture,str));
+        //assertTrue(utility.verifyECDSASignuture(publicKey,signture,str));
     }
 }
