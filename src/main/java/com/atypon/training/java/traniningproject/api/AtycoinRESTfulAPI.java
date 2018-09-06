@@ -54,10 +54,10 @@ public class AtycoinRESTfulAPI {
         return blockchain.getUTXOs();
     }
 
-    @RequestMapping(value = "get_local_utxo_list", method = GET, produces = "application/json")
-    public static Map<String, TransactionOutput> getLocalUTXOList() {
-        return Wallet.getSharedInstance().localUTXOs;
-    }
+//    @RequestMapping(value = "get_local_utxo_list", method = GET, produces = "application/json")
+//    public static Map<String, TransactionOutput> getLocalUTXOList() {
+//        return Wallet.getSharedInstance().localUTXOs;
+//    }
 
     @RequestMapping(value = "send_coin", method = POST, produces = "application/json")
     public static Transaction sendCoin(@RequestBody HashMap<String, String> responseBodyJson) {

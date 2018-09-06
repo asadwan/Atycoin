@@ -3,7 +3,6 @@ package com.atypon.training.java.traniningproject.transactions_system;
 import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
 import com.atypon.training.java.traniningproject.p2p.NodeServer;
 import com.atypon.training.java.traniningproject.utility.Utility;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -14,7 +13,6 @@ import java.util.logging.Logger;
 
 import static com.atypon.training.java.traniningproject.utility.Utility.sha160;
 
-@RestController
 public final class Wallet {
 
     private static final Logger LOGGER = Logger.getLogger(Blockchain.class.getName());
@@ -97,6 +95,14 @@ public final class Wallet {
 
     public String getAddress() {
         return address;
+    }
+
+    public void updateLocalUTXOsOnNewTransactionConfirmed(AtycoinTransaction newTransaction) {
+        for (TransactionOutput output : newTransaction.getOutputs()) {
+            if (sha160(newTransaction.getSenderPublicKeyString()).equals(address) && output.isMine(address)) continue;
+            localUTXOs.put(output.getId(), output);
+        }
+        removeSTXOsFromLocalUTXOList(newTransaction.getInputs());
     }
 
     public void addUTXOsToLocalUTXOsList(ArrayList<TransactionOutput> outputs) {

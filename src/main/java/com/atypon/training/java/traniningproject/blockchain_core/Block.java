@@ -5,7 +5,6 @@ import com.atypon.training.java.traniningproject.transactions_system.Coinbase;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 import static com.atypon.training.java.traniningproject.utility.Utility.repeat;
@@ -20,15 +19,15 @@ public final class Block {
     private Long timestamp;
     private int nonce;
     private String previousBlockHash;
-    private List<AtycoinTransaction> transactions;
+    private AtycoinTransaction transaction;
     private Coinbase coinbase;
 
-    public Block(String previousBlockHash, Coinbase coinbase, List<AtycoinTransaction> transactions) {
+    public Block(String previousBlockHash, Coinbase coinbase, AtycoinTransaction transaction) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
-        this.transactions = transactions;
+        this.transaction = transaction;
     }
 
     public String getHash() {
@@ -52,8 +51,8 @@ public final class Block {
         return nonce;
     }
 
-    public List<AtycoinTransaction> getTransactions() {
-        return transactions;
+    public AtycoinTransaction getTransaction() {
+        return transaction;
     }
 
     public Coinbase getCoinbase() {
@@ -75,7 +74,7 @@ public final class Block {
                 ", timestamp=" + timestamp +
                 ", nonce=" + nonce +
                 ", previousBlockHash='" + previousBlockHash + '\'' +
-                ", transactions=" + transactions +
+                ", transaction=" + transaction +
                 ", coinbase=" + coinbase +
                 '}';
     }
@@ -89,12 +88,12 @@ public final class Block {
                 nonce == block.nonce &&
                 Objects.equals(timestamp, block.timestamp) &&
                 Objects.equals(previousBlockHash, block.previousBlockHash) &&
-                Objects.equals(transactions, block.transactions) &&
+                Objects.equals(transaction, block.transaction) &&
                 Objects.equals(coinbase, block.coinbase);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, timestamp, nonce, previousBlockHash, transactions, coinbase);
+        return Objects.hash(index, timestamp, nonce, previousBlockHash, transaction, coinbase);
     }
 }

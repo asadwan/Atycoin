@@ -1,12 +1,8 @@
 package com.atypon.training.java.traniningproject.utility;
 
-import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
-
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -86,14 +82,8 @@ public final class Utility {
             dsaSignature.initVerify(publicKey);
             dsaSignature.update(data.getBytes());
             verified = dsaSignature.verify(signature);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException();
         }
         return verified;
     }
@@ -123,30 +113,5 @@ public final class Utility {
         }
     }
 
-    /**
-     *
-     */
-
-    public static String getMerkleRoot(ArrayList<AtycoinTransaction> transactions) {
-        int count = transactions.size();
-
-        List<String> previousTreeLayer = new ArrayList<String>();
-        for (AtycoinTransaction transaction : transactions) {
-            previousTreeLayer.add(transaction.getTransactionId());
-        }
-        List<String> treeLayer = previousTreeLayer;
-
-        while (count > 1) {
-            treeLayer = new ArrayList<String>();
-            for (int i = 1; i < previousTreeLayer.size(); i += 2) {
-                treeLayer.add(sha256(previousTreeLayer.get(i - 1) + previousTreeLayer.get(i)));
-            }
-            count = treeLayer.size();
-            previousTreeLayer = treeLayer;
-        }
-
-        String merkleRoot = (treeLayer.size() == 1) ? treeLayer.get(0) : "";
-        return merkleRoot;
-    }
 
 }

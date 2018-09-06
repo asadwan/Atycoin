@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Logger;
 
 @JsonIgnoreProperties
@@ -19,11 +19,11 @@ public final class Blockchain {
     // Singlton
     private static volatile Blockchain INSTANCE = new Blockchain();
 
-    public static int difficulty = 5;
+    public static int difficulty = 4;
 
     private HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
     private ArrayList<Block> chain = new ArrayList<>();
-    private List<AtycoinTransaction> mempool = Collections.synchronizedList(new ArrayList<>());
+    private BlockingQueue<AtycoinTransaction> mempool = new LinkedBlockingQueue<>();
 
     // Singlton
     public static Blockchain getSharedInstance() {
@@ -52,15 +52,15 @@ public final class Blockchain {
             return;
         }
         chain.add(block);
+        removeTransactionsFromMempool(block);
         updateUTXOsListOnAddBlock(block);
-        Wallet.getSharedInstance().localUTXOs.clear();
-        UTXOs.values().stream().forEach(output -> Wallet.getSharedInstance().localUTXOs.put(output.getId(), output));
+//        Wallet.getSharedInstance().localUTXOs.clear();
+//        UTXOs.values().stream().forEach(output -> Wallet.getSharedInstance().localUTXOs.put(output.getId(), output));
         LOGGER.info("A new block has been added to the chain");
     }
 
     private boolean isBlockValid(Block block) {
-        Block previousBlock = getPreviousBlock();
-        if (!block.getPreviousBlockHash().equalsIgnoreCase(previousBlock.getHash())) return false;
+        if (!isHashChainValid(getPreviousBlock(), block)) return false;
         String target = Utility.repeat("0", difficulty);
         boolean isPoWValid = block.getHash().startsWith(target);
         return isPoWValid;
@@ -77,29 +77,20 @@ public final class Blockchain {
 
     public Block mineBlock(String previousHash) {
         Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().getAddress());
-        List<AtycoinTransaction> pickedTransactions = pickTransactionsForNextBlock();
-        Block block = new Block(previousHash, coinbase, pickedTransactions);
+        AtycoinTransaction pickedTransaction = pickTransactionForNextBlock();
+        Block block = new Block(previousHash, coinbase, pickedTransaction);
         block.mine(difficulty);
         chain.add(block);
         updateUTXOsListOnAddBlock(block);
-        Wallet.getSharedInstance().localUTXOs.clear();
-        UTXOs.values().stream().forEach(output -> Wallet.getSharedInstance().localUTXOs.put(output.getId(), output));
         return block;
     }
 
-    private List<AtycoinTransaction> pickTransactionsForNextBlock() {
-        List<AtycoinTransaction> pickedTransactions = new ArrayList<>();
-        for (AtycoinTransaction transaction : mempool) {
-            if (transaction.isTransactionValid()) {
-                pickedTransactions.add(transaction);
-                //mempool.removeIf(trx -> transaction == trx);
-            } else {
-                LOGGER.info("AtycoinTransaction " + transaction.getTransactionId() + " has been found invalid" +
-                        "and was discarded and will not be included in block " + (chain.size() + 1));
-            }
+    private AtycoinTransaction pickTransactionForNextBlock() {
+        AtycoinTransaction pickedTransaction;
+        while (true) {
+            if ((pickedTransaction = mempool.poll()) == null) return new AtycoinTransaction();
+            if (pickedTransaction.isTransactionValid()) return pickedTransaction;
         }
-        mempool.clear();
-        return pickedTransactions;
     }
 
     @JsonIgnore
@@ -108,31 +99,30 @@ public final class Blockchain {
     }
 
     @JsonIgnore
-    public List<AtycoinTransaction> getMempool() {
+    public BlockingQueue<AtycoinTransaction> getMempool() {
         return mempool;
-    }
-
-    public boolean isChainValid(ArrayList<Block> chain) {
-        Block previousBlock;
-        Block currentBlock;
-        String target = Utility.repeat("0", difficulty);
-        for (int i = 1; i < chain.size(); i++) {
-            currentBlock = chain.get(i);
-            previousBlock = chain.get(i - 1);
-            if (!currentBlock.getPreviousBlockHash().equalsIgnoreCase(previousBlock.getHash())) {
-                return false;
-            }
-
-            boolean proofOfWorkValid = currentBlock.getHash().startsWith(target);
-            if (!proofOfWorkValid) {
-                return false;
-            }
-        }
-        return true;
     }
 
     public void addTransaction(AtycoinTransaction transaction) {
         this.mempool.add(transaction);
+    }
+
+    public boolean isChainValid(ArrayList<Block> chain) {
+        for (int i = 1; i < chain.size(); i++) {
+            if (isHashChainValid(chain.get(i - 1), chain.get(i))) return false;
+            if (!isProofOfWorkValid(chain.get(i - 1))) return false;
+        }
+        return true;
+    }
+
+    private boolean isHashChainValid(Block previousBlock, Block currentBlock) {
+        return currentBlock.getPreviousBlockHash().equalsIgnoreCase(previousBlock.getHash());
+    }
+
+    private boolean isProofOfWorkValid(Block currentBlock) {
+        String target = Utility.repeat("0", difficulty);
+        boolean proofOfWorkValid = currentBlock.getHash().startsWith(target);
+        return proofOfWorkValid;
     }
 
     public boolean replaceChain(ArrayList<Block> otherChain, Integer fromPeer) {
@@ -166,10 +156,11 @@ public final class Blockchain {
 
     public void updateUTXOsListOnAddBlock(Block block) {
         UTXOs.put(block.getCoinbase().getBlockReward().getId(), block.getCoinbase().getBlockReward());
-        for (Transaction transaction : block.getTransactions()) {
-            removeSTXOsFromUTXOList(transaction.getInputs());
-            addUTXOsToUTXOsList(transaction.getOutputs());
-        }
+        Wallet.getSharedInstance().localUTXOs.put(block.getCoinbase().getBlockReward().getId(),
+                block.getCoinbase().getBlockReward());
+        removeSTXOsFromUTXOList(block.getTransaction().getInputs());
+        addUTXOsToUTXOsList(block.getTransaction().getOutputs());
+        Wallet.getSharedInstance().updateLocalUTXOsOnNewTransactionConfirmed(block.getTransaction());
     }
 
     public void removeSTXOsFromUTXOList(ArrayList<TransactionInput> transactionInputs) {
@@ -191,8 +182,6 @@ public final class Blockchain {
     }
 
     private void removeTransactionsFromMempool(Block block) {
-        for (Transaction transaction : block.getTransactions()) {
-            mempool.removeIf(trx -> trx.getTransactionId().equals(transaction.getTransactionId()));
-        }
+        mempool.removeIf(trx -> trx.getTransactionId().equals(block.getTransaction().getTransactionId()));
     }
 }

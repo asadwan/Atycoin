@@ -8,14 +8,11 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.logging.Logger;
 
 import static com.atypon.training.java.traniningproject.utility.Utility.*;
 
 @JsonIgnoreProperties
 public final class AtycoinTransaction implements Transaction {
-
-    private transient final Logger LOGGER = Logger.getLogger(AtycoinTransaction.class.getName());
 
     private static int sequence = 0;
 
@@ -35,6 +32,9 @@ public final class AtycoinTransaction implements Transaction {
         this.recipientAddress = recipientAddress;
         this.amount = amount;
         this.inputs = inputs;
+    }
+
+    public AtycoinTransaction() {
     }
 
     @Override
@@ -108,6 +108,7 @@ public final class AtycoinTransaction implements Transaction {
         signature = applyECDSASignuture(privateKey, this.toString());
     }
 
+    @JsonIgnore
     public boolean isSignatureValid() {
         PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
         return verifyECDSASignuture(senderPublicKey, signature, this.toString());
@@ -135,8 +136,7 @@ public final class AtycoinTransaction implements Transaction {
 
     private String generateTransactionHash() {
         ++sequence;
-        String hash = sha256(this.toString() + sequence);
-        return hash;
+        return sha256(this.toString() + sequence);
     }
 
     @Override
