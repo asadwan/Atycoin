@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject.utility;
+package com.atypon.training.java.atycoin.utility;
 
 import java.security.*;
 import java.security.spec.X509EncodedKeySpec;

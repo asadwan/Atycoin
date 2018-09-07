@@ -1,4 +1,4 @@
-import com.atypon.training.java.traniningproject.transactions_system.Wallet;
+import com.atypon.training.java.atycoin.transactions_system.Wallet;
 import org.junit.Before;
 import org.junit.Test;
 

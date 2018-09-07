@@ -1,9 +1,9 @@
-package com.atypon.training.java.traniningproject.p2p;
+package com.atypon.training.java.atycoin.p2p;
 
-import com.atypon.training.java.traniningproject.blockchain_core.Block;
-import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
-import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
-import com.atypon.training.java.traniningproject.transactions_system.Transaction;
+import com.atypon.training.java.atycoin.blockchain_core.Block;
+import com.atypon.training.java.atycoin.blockchain_core.Blockchain;
+import com.atypon.training.java.atycoin.transactions_system.AtycoinTransaction;
+import com.atypon.training.java.atycoin.transactions_system.Transaction;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 

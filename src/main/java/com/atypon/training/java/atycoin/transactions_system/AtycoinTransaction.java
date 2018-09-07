@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject.transactions_system;
+package com.atypon.training.java.atycoin.transactions_system;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 
-import static com.atypon.training.java.traniningproject.utility.Utility.*;
+import static com.atypon.training.java.atycoin.utility.Utility.*;
 
 @JsonIgnoreProperties
 public final class AtycoinTransaction implements Transaction {
@@ -32,9 +32,6 @@ public final class AtycoinTransaction implements Transaction {
         this.recipientAddress = recipientAddress;
         this.amount = amount;
         this.inputs = inputs;
-    }
-
-    public AtycoinTransaction() {
     }
 
     @Override
@@ -109,6 +106,7 @@ public final class AtycoinTransaction implements Transaction {
     }
 
     @JsonIgnore
+
     public boolean isSignatureValid() {
         PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
         return verifyECDSASignuture(senderPublicKey, signature, this.toString());

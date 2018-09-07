@@ -1,8 +1,8 @@
-package com.atypon.training.java.traniningproject.transactions_system;
+package com.atypon.training.java.atycoin.transactions_system;
 
-import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
-import com.atypon.training.java.traniningproject.p2p.NodeServer;
-import com.atypon.training.java.traniningproject.utility.Utility;
+import com.atypon.training.java.atycoin.blockchain_core.Blockchain;
+import com.atypon.training.java.atycoin.p2p.NodeServer;
+import com.atypon.training.java.atycoin.utility.Utility;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -11,12 +11,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static com.atypon.training.java.traniningproject.utility.Utility.sha160;
+import static com.atypon.training.java.atycoin.utility.Utility.sha160;
 
 public final class Wallet {
 
     private static final Logger LOGGER = Logger.getLogger(Blockchain.class.getName());
-
     private static volatile Wallet WALLET;
 
     public Map<String, TransactionOutput> localUTXOs = new HashMap<>();
@@ -61,9 +60,9 @@ public final class Wallet {
 
     public float getBalance() {
         float balance = 0;
-        for (TransactionOutput UTXO : localUTXOs.values()) {
-            if (UTXO.isMine(address)) {
-                balance += UTXO.getAmount();
+        for (TransactionOutput utxo : localUTXOs.values()) {
+            if (utxo.isMine(address)) {
+                balance += utxo.getAmount();
             }
         }
         return balance;
@@ -97,12 +96,15 @@ public final class Wallet {
         return address;
     }
 
-    public void updateLocalUTXOsOnNewTransactionConfirmed(AtycoinTransaction newTransaction) {
-        for (TransactionOutput output : newTransaction.getOutputs()) {
-            if (sha160(newTransaction.getSenderPublicKeyString()).equals(address) && output.isMine(address)) continue;
-            localUTXOs.put(output.getId(), output);
+    public void updateLocalUTXOsOnNewTransactionConfirmed(ArrayList<AtycoinTransaction> transactions) {
+        for (AtycoinTransaction transaction : transactions) {
+            for (TransactionOutput output : transaction.getOutputs()) {
+                if (sha160(transaction.getSenderPublicKeyString()).equals(address) && output.isMine(address))
+                    continue;
+                localUTXOs.put(output.getId(), output);
+            }
+            removeSTXOsFromLocalUTXOList(transaction.getInputs());
         }
-        removeSTXOsFromLocalUTXOList(newTransaction.getInputs());
     }
 
     public void addUTXOsToLocalUTXOsList(ArrayList<TransactionOutput> outputs) {

@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject.p2p;
+package com.atypon.training.java.atycoin.p2p;
 
 import java.io.IOException;
 import java.io.PrintWriter;

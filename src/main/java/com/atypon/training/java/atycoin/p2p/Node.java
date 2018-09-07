@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject.p2p;
+package com.atypon.training.java.atycoin.p2p;
 
 import java.io.*;
 import java.util.Objects;
@@ -40,12 +40,12 @@ public final class Node {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(
                     new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
-                            "/com/atypon/training/java/traniningproject/p2p/port.txt")));
+                            "/com/atypon/training/java/atycoin/p2p/port.txt")));
             int port = Integer.parseInt(bufferedReader.readLine());
             peersAddresses.add(port);
             PrintWriter printWriter = new PrintWriter(new FileWriter(
                     new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
-                            "/com/atypon/training/java/traniningproject/p2p/port.txt")));
+                            "/com/atypon/training/java/atycoin/p2p/port.txt")));
             printWriter.write(String.valueOf(port + 1) + "\n");
             printWriter.close();
             bufferedReader.close();

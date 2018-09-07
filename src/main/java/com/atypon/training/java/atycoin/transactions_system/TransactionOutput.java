@@ -1,12 +1,12 @@
-package com.atypon.training.java.traniningproject.transactions_system;
+package com.atypon.training.java.atycoin.transactions_system;
 
-import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
+import com.atypon.training.java.atycoin.blockchain_core.Blockchain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Objects;
 
-import static com.atypon.training.java.traniningproject.utility.Utility.sha256;
+import static com.atypon.training.java.atycoin.utility.Utility.sha256;
 
 @JsonIgnoreProperties
 public final class TransactionOutput {

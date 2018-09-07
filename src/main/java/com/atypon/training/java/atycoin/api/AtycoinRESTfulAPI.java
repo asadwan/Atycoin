@@ -1,10 +1,10 @@
-package com.atypon.training.java.traniningproject.api;
+package com.atypon.training.java.atycoin.api;
 
-import com.atypon.training.java.traniningproject.blockchain_core.Block;
-import com.atypon.training.java.traniningproject.blockchain_core.Blockchain;
-import com.atypon.training.java.traniningproject.p2p.Node;
-import com.atypon.training.java.traniningproject.p2p.NodeClient;
-import com.atypon.training.java.traniningproject.transactions_system.*;
+import com.atypon.training.java.atycoin.blockchain_core.Block;
+import com.atypon.training.java.atycoin.blockchain_core.Blockchain;
+import com.atypon.training.java.atycoin.p2p.Node;
+import com.atypon.training.java.atycoin.p2p.NodeClient;
+import com.atypon.training.java.atycoin.transactions_system.*;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +22,9 @@ public class AtycoinRESTfulAPI {
     private static Blockchain blockchain = Blockchain.getSharedInstance();
     private static Wallet wallet = Wallet.getSharedInstance();
 
+    /**
+     * @return
+     */
     @RequestMapping(value = "/mine_block", method = GET, produces = "application/json")
     public static Block mineBlock() {
         Block previousBlock = blockchain.getPreviousBlock();
@@ -31,16 +34,27 @@ public class AtycoinRESTfulAPI {
         return block;
     }
 
+    /**
+     * @return
+     */
     @RequestMapping(value = "/get_chain", method = GET, produces = "application/json")
     public static Blockchain getChain() {
         return blockchain;
     }
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "/blockchain_valid", method = GET, produces = "application/json")
     public static boolean isBlockChainValid() {
         return blockchain.isChainValid(blockchain.getBlocks());
     }
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "get_balance", method = GET, produces = "application/json")
     public static Map<String, Float> getBalance() {
         float balance = wallet.getBalance();
@@ -49,16 +63,20 @@ public class AtycoinRESTfulAPI {
         return response;
     }
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "get_utxo_list", method = GET, produces = "application/json")
     public static Map<String, TransactionOutput> getUTXOList() {
         return blockchain.getUTXOs();
     }
 
-//    @RequestMapping(value = "get_local_utxo_list", method = GET, produces = "application/json")
-//    public static Map<String, TransactionOutput> getLocalUTXOList() {
-//        return Wallet.getSharedInstance().localUTXOs;
-//    }
-
+    /**
+     *
+     * @param responseBodyJson
+     * @return
+     */
     @RequestMapping(value = "send_coin", method = POST, produces = "application/json")
     public static Transaction sendCoin(@RequestBody HashMap<String, String> responseBodyJson) {
         float amount = Float.parseFloat(responseBodyJson.get("amount"));
@@ -70,11 +88,19 @@ public class AtycoinRESTfulAPI {
         return transaction;
     }
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "get_connected_peers", method = GET, produces = "application/json")
     public static Set<Integer> getConnectedPeers() {
         return Node.getSharedInstance().getPeersAddresses();
     }
 
+    /**
+     *
+     * @return
+     */
     @RequestMapping(value = "get_wallet_address", method = GET, produces = "application/json")
     public static Map<String, String> getWalletAddress() {
         String address = wallet.getAddress();

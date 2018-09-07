@@ -1,4 +1,4 @@
-package com.atypon.training.java.traniningproject.transactions_system;
+package com.atypon.training.java.atycoin.transactions_system;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

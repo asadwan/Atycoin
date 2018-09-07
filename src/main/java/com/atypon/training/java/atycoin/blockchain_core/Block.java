@@ -1,15 +1,15 @@
-package com.atypon.training.java.traniningproject.blockchain_core;
+package com.atypon.training.java.atycoin.blockchain_core;
 
-import com.atypon.training.java.traniningproject.transactions_system.AtycoinTransaction;
-import com.atypon.training.java.traniningproject.transactions_system.Coinbase;
+import com.atypon.training.java.atycoin.transactions_system.AtycoinTransaction;
+import com.atypon.training.java.atycoin.transactions_system.Coinbase;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
-import static com.atypon.training.java.traniningproject.utility.Utility.repeat;
-import static com.atypon.training.java.traniningproject.utility.Utility.sha256;
-
+import static com.atypon.training.java.atycoin.utility.Utility.repeat;
+import static com.atypon.training.java.atycoin.utility.Utility.sha256;
 
 @JsonIgnoreProperties
 public final class Block {
@@ -19,15 +19,15 @@ public final class Block {
     private Long timestamp;
     private int nonce;
     private String previousBlockHash;
-    private AtycoinTransaction transaction;
+    private ArrayList<AtycoinTransaction> transactions;
     private Coinbase coinbase;
 
-    public Block(String previousBlockHash, Coinbase coinbase, AtycoinTransaction transaction) {
+    public Block(String previousBlockHash, Coinbase coinbase, ArrayList<AtycoinTransaction> transactions) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
         this.previousBlockHash = previousBlockHash;
-        this.transaction = transaction;
+        this.transactions = transactions;
     }
 
     public String getHash() {
@@ -51,8 +51,8 @@ public final class Block {
         return nonce;
     }
 
-    public AtycoinTransaction getTransaction() {
-        return transaction;
+    public ArrayList<AtycoinTransaction> getTransactions() {
+        return transactions;
     }
 
     public Coinbase getCoinbase() {
@@ -74,7 +74,7 @@ public final class Block {
                 ", timestamp=" + timestamp +
                 ", nonce=" + nonce +
                 ", previousBlockHash='" + previousBlockHash + '\'' +
-                ", transaction=" + transaction +
+                ", transactions=" + transactions +
                 ", coinbase=" + coinbase +
                 '}';
     }
@@ -88,12 +88,12 @@ public final class Block {
                 nonce == block.nonce &&
                 Objects.equals(timestamp, block.timestamp) &&
                 Objects.equals(previousBlockHash, block.previousBlockHash) &&
-                Objects.equals(transaction, block.transaction) &&
+                Objects.equals(transactions, block.transactions) &&
                 Objects.equals(coinbase, block.coinbase);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(index, timestamp, nonce, previousBlockHash, transaction, coinbase);
+        return Objects.hash(index, timestamp, nonce, previousBlockHash, transactions, coinbase);
     }
 }
