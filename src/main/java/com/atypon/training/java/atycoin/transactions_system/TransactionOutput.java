@@ -38,25 +38,16 @@ public final class TransactionOutput {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getRecipientAddress() {
         return recipientAddress;
     }
 
-    public void setRecipientAddress(String recipientAddress) {
-        this.recipientAddress = recipientAddress;
-    }
 
     public float getAmount() {
         return amount;
     }
 
-    public void setAmount(float amount) {
-        this.amount = amount;
-    }
 
     public boolean isUnspent() {
         return Blockchain.getSharedInstance().getUTXOs().containsKey(this.id);

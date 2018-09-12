@@ -9,6 +9,10 @@ import static java.util.stream.Collectors.joining;
 
 public final class Utility {
 
+    private Utility() {
+    }
+
+
     /**
      * Calculates the sha256 hash to a given input "data"
      */

@@ -30,7 +30,7 @@ public final class NodeServerThread implements Runnable {
     private String message;
     private Gson gson = new Gson();
 
-    public NodeServerThread(Socket skt) {
+    NodeServerThread(Socket skt) {
         this.skt = skt;
         try {
             this.inputFromPeer = new BufferedReader(new InputStreamReader(skt.getInputStream()));
@@ -49,6 +49,12 @@ public final class NodeServerThread implements Runnable {
             e.printStackTrace();
         } finally {
             LOGGER.info("Bye from ServerThread handling communication with peer " + peerAddress);
+            try {
+                if (skt != null) skt.close();
+                if (inputFromPeer != null) inputFromPeer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -73,7 +79,7 @@ public final class NodeServerThread implements Runnable {
         }.getType();
         Map<String, ArrayList<Block>> chainMap = gson.fromJson(message, stringArrayListType);
         ArrayList<Block> chain = chainMap.get("chain");
-        boolean isReplaced = blockchain.replaceChain(chain, peerAddress);
+        blockchain.replaceChain(chain);
     }
 
     private void handleNewPeersListMessage() {
@@ -97,9 +103,7 @@ public final class NodeServerThread implements Runnable {
         }.getType();
         Map<String, Block> blockMapMap = gson.fromJson(message, stringBlockMapType);
         Block block = blockMapMap.get("block");
-        new Thread(() -> {
-            blockchain.addBlock(block);
-        }).start();
+        new Thread(() -> blockchain.addBlock(block)).start();
     }
 
     private void handleNewTransactionMessage() {
@@ -109,7 +113,7 @@ public final class NodeServerThread implements Runnable {
         Map<String, Transaction> transactionMap = gson.fromJson(message, stringTransactionMapType);
         Transaction transaction = transactionMap.get("transaction");
         blockchain.addTransaction((AtycoinTransaction) transaction);
-        LOGGER.info("A new transaction recieved from peer " + peerAddress +
+        LOGGER.info("A new transaction received from peer " + peerAddress +
                 " has been added to the mempool ");
     }
 

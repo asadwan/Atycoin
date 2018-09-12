@@ -14,7 +14,6 @@ import static com.atypon.training.java.atycoin.utility.Utility.sha256;
 @JsonIgnoreProperties
 public final class Block {
 
-
     private int index;
     private Long timestamp;
     private int nonce;
@@ -22,7 +21,8 @@ public final class Block {
     private ArrayList<AtycoinTransaction> transactions;
     private Coinbase coinbase;
 
-    public Block(String previousBlockHash, Coinbase coinbase, ArrayList<AtycoinTransaction> transactions) {
+    private Block(String previousBlockHash, Coinbase coinbase,
+                  ArrayList<AtycoinTransaction> transactions) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
@@ -30,9 +30,13 @@ public final class Block {
         this.transactions = transactions;
     }
 
+    public static Block createInstance(String previousBlockHash, Coinbase coinbase,
+                                       ArrayList<AtycoinTransaction> transactions) {
+        return new Block(previousBlockHash, coinbase, transactions);
+    }
+
     public String getHash() {
-        String hash = sha256(this.toString()).toUpperCase();
-        return hash;
+        return sha256(this.toString());
     }
 
     public String getPreviousBlockHash() {
@@ -60,7 +64,7 @@ public final class Block {
     }
 
     public void mine(int difficulty) {
-        //Create a string with (difficulty * "0")
+        //Create a string with (DIFFICULTY * "0")
         String target = repeat("0", difficulty);
         while (!getHash().startsWith(target)) {
             nonce++;

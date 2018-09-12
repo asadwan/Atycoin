@@ -18,7 +18,6 @@ public final class NullTransaction implements Transaction {
 
     @Override
     public void processTransaction() {
-
     }
 
     @Override

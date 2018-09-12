@@ -22,7 +22,7 @@ public final class AtycoinTransaction implements Transaction {
     private float amount;
     private byte[] signature;
 
-    private ArrayList<TransactionInput> inputs = new ArrayList<>();
+    private ArrayList<TransactionInput> inputs;
     private ArrayList<TransactionOutput> outputs = new ArrayList<>();
 
 
@@ -106,18 +106,15 @@ public final class AtycoinTransaction implements Transaction {
     }
 
     @JsonIgnore
-
-    public boolean isSignatureValid() {
-        PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
-        return verifyECDSASignuture(senderPublicKey, signature, this.toString());
-    }
-
-    @JsonIgnore
     public boolean isTransactionValid() {
         return areInputsValid() && isSignatureValid();
     }
 
-    @JsonIgnore
+    private boolean isSignatureValid() {
+        PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
+        return verifyECDSASignuture(senderPublicKey, signature, this.toString());
+    }
+
     private boolean areInputsValid() {
         for (TransactionInput transactionInput : inputs) {
             if (!isInputValid(transactionInput)) return false;

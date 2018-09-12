@@ -12,10 +12,8 @@ import java.security.Security;
 @SpringBootApplication
 public class Atycoin {
     public static void main(String[] args) {
-
         //Setting Bouncey Castle as a Security Provider
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-
         SpringApplication.run(Atycoin.class, args);
         Blockchain.getSharedInstance().createGenesisBlock();
         NodeServer.getSharedInstance().start();

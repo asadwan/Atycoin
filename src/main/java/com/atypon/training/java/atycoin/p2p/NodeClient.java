@@ -17,8 +17,7 @@ public final class NodeClient {
     private static volatile NodeClient INSTANCE = new NodeClient();
     private static final Integer PEER_ADDRESS = Node.getSharedInstance().getPort();
     private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
-    private final String INITIAL_NODES_FILE = "/Users/asadwan/IntellijIDEAProjects/TrainingProject/" +
-            "src/main/resources/initial-nodes.txt";
+    private static Gson gson = new Gson();
 
     public List<Connection> peersConnections = new ArrayList<>();
 
@@ -35,12 +34,13 @@ public final class NodeClient {
     }
 
     public void start() {
-        loadSavedNodesAddresses();
+        loadSavedPeerAddresses();
         connectToPeers();
         broadcastMyAddress();
     }
 
-    public void loadSavedNodesAddresses() {
+    private void loadSavedPeerAddresses() {
+        String INITIAL_NODES_FILE = "src/main/resources/initial-nodes.txt";
         try (BufferedReader br = new BufferedReader(new FileReader(INITIAL_NODES_FILE))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -56,10 +56,8 @@ public final class NodeClient {
         }
     }
 
-    public void connectToPeers() {
+    private void connectToPeers() {
         LOGGER.info("Connecting to peers...");
-        int nodePort;
-        final String nodeHost = "localhost";
         Set<Integer> peersAddresses = Node.getSharedInstance().getPeersAddresses();
         for (Integer peerAddress : peersAddresses) {
             if (peerAddress.equals(Node.getSharedInstance().getPort()))
@@ -68,7 +66,7 @@ public final class NodeClient {
         }
     }
 
-    public void connectToPeer(Integer peerAddress) {
+    void connectToPeer(Integer peerAddress) {
         if (peersConnections.stream().anyMatch(connection -> connection.equals(peerAddress))) return;
         if (peerAddress.equals(Node.getSharedInstance().getPort())) return;
         try {
@@ -81,13 +79,13 @@ public final class NodeClient {
         }
     }
 
-    public void broadcastMyAddress() {
+    private void broadcastMyAddress() {
         for (Connection connection : peersConnections) {
             sendMyAddressToPeer(connection.getPeerAddress());
         }
     }
 
-    public void sendMyAddressToPeer(Integer peerAddress) {
+    void sendMyAddressToPeer(Integer peerAddress) {
         Integer myAddress = Node.getSharedInstance().getPort();
         Map<String, Integer> myNodeMessage = new HashMap<>();
         myNodeMessage.put("peer", myAddress);
@@ -104,39 +102,38 @@ public final class NodeClient {
     public void broadcastNewTransaction(Transaction transaction) {
         Map<String, Transaction> newTransactionMessage = new HashMap<>();
         newTransactionMessage.put("transaction", transaction);
-        Gson gson = new Gson();
-        String messageJson;
-        messageJson = gson.toJson(newTransactionMessage);
-        for (Connection connection : peersConnections) {
-            PrintWriter outToPeer = connection.getOutToPeerStream();
-            Integer peerAddress = connection.getPeerAddress();
-            outToPeer.println(messageJson);
-            outToPeer.flush();
-            LOGGER.info("A new transaction has been shared with peer" + peerAddress);
+        String transactionJson = gson.toJson(newTransactionMessage);
+        for (Connection peerConnection : peersConnections) {
+            sendNewTransactionToPeer(transactionJson, peerConnection);
         }
+    }
+
+    private void sendNewTransactionToPeer(String transactionJson, Connection peerConnection) {
+        PrintWriter outToPeer = peerConnection.getOutToPeerStream();
+        Integer peerAddress = peerConnection.getPeerAddress();
+        outToPeer.println(transactionJson);
+        outToPeer.flush();
+        LOGGER.info("A new transaction has been shared with peer" + peerAddress);
     }
 
     public void broadcastNewBlock(Block block) {
         Map<String, Block> newBlockMessage = new HashMap<>();
         newBlockMessage.put("block", block);
-        Gson gson = new Gson();
-        String messageJson = gson.toJson(newBlockMessage);
+        String newBlockJson = gson.toJson(newBlockMessage);
         for (Connection connection : peersConnections) {
-            PrintWriter outToPeer = connection.getOutToPeerStream();
-            Integer peerAddress = connection.getPeerAddress();
-            outToPeer.println(messageJson);
-            outToPeer.flush();
-            LOGGER.info("A new block has been shared with peer " + peerAddress);
+            sendNewBlockToPeer(newBlockJson, connection);
         }
     }
 
-    public void broadcastConncectedPeersAddresses() {
-        for (Connection connection : peersConnections) {
-            sendConnectedPeersAddressesToPeer(connection.getPeerAddress());
-        }
+    private void sendNewBlockToPeer(String blockJson, Connection peerConnection) {
+        PrintWriter outToPeer = peerConnection.getOutToPeerStream();
+        Integer peerAddress = peerConnection.getPeerAddress();
+        outToPeer.println(blockJson);
+        outToPeer.flush();
+        LOGGER.info("A new block has been shared with peer " + peerAddress);
     }
 
-    public void sendConnectedPeersAddressesToPeer(Integer peerAddress) {
+    void sendConnectedPeersAddressesToPeer(Integer peerAddress) {
         Map<String, Set<Integer>> peersListMessage = new HashMap<>();
         Set<Integer> peersAddresses = Node.getSharedInstance().getPeersAddresses();
         peersListMessage.put("peers", peersAddresses);
@@ -150,25 +147,7 @@ public final class NodeClient {
         LOGGER.info("This peer's stored peers addresses list has been sent to " + peerAddress);
     }
 
-    public void broadcastNewPeerAddress(Integer newPeerAddress) {
-        Integer toPeerAddress;
-        for (Connection connection : peersConnections) {
-            toPeerAddress = connection.getPeerAddress();
-            if (toPeerAddress.equals(PEER_ADDRESS)) continue;
-            if (toPeerAddress.equals(newPeerAddress)) continue;
-            Map<String, Integer> newPeerMessage = new HashMap<>();
-            newPeerMessage.put("peer", newPeerAddress);
-            Gson gson = new Gson();
-            String messageJson = gson.toJson(newPeerAddress);
-            PrintWriter outToPeer = peersConnections.stream().filter(conn -> conn.getPeerAddress().
-                    equals(conn.getPeerAddress())).findFirst().get().getOutToPeerStream();
-            outToPeer.println(messageJson);
-            outToPeer.flush();
-            LOGGER.info("Peer address '" + newPeerAddress + "' has been sent to peer " + toPeerAddress);
-        }
-    }
-
-    public void sendMyChainToPeer(Integer peerAddress) {
+    void sendMyChainToPeer(Integer peerAddress) {
         Map<String, ArrayList<Block>> chainMessage = new HashMap<>();
         ArrayList<Block> chain = Blockchain.getSharedInstance().getBlocks();
         chainMessage.put("chain", chain);

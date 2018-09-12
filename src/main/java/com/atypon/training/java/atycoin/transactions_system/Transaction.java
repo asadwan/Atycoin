@@ -16,4 +16,7 @@ public interface Transaction {
     ArrayList<TransactionInput> getInputs();
 
     ArrayList<TransactionOutput> getOutputs();
+
 }
+
+

@@ -1,7 +1,6 @@
 package com.atypon.training.java.atycoin.transactions_system;
 
 import com.atypon.training.java.atycoin.blockchain_core.Blockchain;
-import com.atypon.training.java.atycoin.p2p.NodeServer;
 import com.atypon.training.java.atycoin.utility.Utility;
 
 import java.security.*;
@@ -16,7 +15,7 @@ import static com.atypon.training.java.atycoin.utility.Utility.sha160;
 public final class Wallet {
 
     private static final Logger LOGGER = Logger.getLogger(Blockchain.class.getName());
-    private static volatile Wallet WALLET;
+
 
     public Map<String, TransactionOutput> localUTXOs = new HashMap<>();
 
@@ -24,19 +23,14 @@ public final class Wallet {
     private PublicKey publicKey;
     private String address;
 
+    private static final Wallet WALLET = new Wallet();
+
     private Wallet() {
         generateKeyPair();
         address = sha160(Utility.getStringFromPublicKey(publicKey));
     }
 
     public static Wallet getSharedInstance() {
-        if (WALLET == null) { // Check 1
-            synchronized (NodeServer.class) {
-                if (WALLET == null) { // Check 2
-                    WALLET = new Wallet();
-                }
-            }
-        }
         return WALLET;
     }
 
@@ -70,11 +64,12 @@ public final class Wallet {
 
     public Transaction sendCoin(String recipientAddress, float amount) {
         if (getBalance() < amount) {
-            LOGGER.info("No enough funds to send transaction. AtycoinTransaction Discarded.");
+            LOGGER.info("No enough funds to send transaction. Transaction Discarded.");
             return new NullTransaction();
         }
         ArrayList<TransactionInput> inputs = getInputs(amount);
-        AtycoinTransaction newTransaction = new AtycoinTransaction(this.publicKey, recipientAddress, amount, inputs);
+        AtycoinTransaction newTransaction = TransactionFactory.getTransaction(this.publicKey, recipientAddress,
+                amount, inputs);
         newTransaction.processTransaction();
         newTransaction.generateSignature(this.privateKey);
         return newTransaction;
@@ -87,7 +82,7 @@ public final class Wallet {
             if (!UTXO.isMine(address)) continue;
             total += UTXO.getAmount();
             inputs.add(new TransactionInput(UTXO.getId(), UTXO));
-            if (total > amount) break;
+            if (total >= amount) break;
         }
         return inputs;
     }

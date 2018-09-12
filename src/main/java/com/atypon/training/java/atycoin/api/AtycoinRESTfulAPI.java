@@ -23,13 +23,12 @@ public class AtycoinRESTfulAPI {
     private static Wallet wallet = Wallet.getSharedInstance();
 
     /**
-     * @return
+     * @return the mined block
      */
     @RequestMapping(value = "/mine_block", method = GET, produces = "application/json")
     public static Block mineBlock() {
-        Block previousBlock = blockchain.getPreviousBlock();
-        String previousHash = previousBlock.getHash();
-        Block block = blockchain.mineBlock(previousHash);
+        String previousBlockHash = blockchain.getPreviousBlock().getHash();
+        Block block = blockchain.mineBlock(previousBlockHash);
         NodeClient.getSharedInstance().broadcastNewBlock(block);
         return block;
     }
@@ -82,7 +81,7 @@ public class AtycoinRESTfulAPI {
         float amount = Float.parseFloat(responseBodyJson.get("amount"));
         String recipient = responseBodyJson.get("recipient");
         Transaction transaction = wallet.sendCoin(recipient, amount);
-        if (transaction instanceof NullTransaction) return new NullTransaction();
+        if (transaction instanceof NullTransaction) return TransactionFactory.getNullTransaction();
         blockchain.addTransaction((AtycoinTransaction) transaction);
         NodeClient.getSharedInstance().broadcastNewTransaction(transaction);
         return transaction;

@@ -37,15 +37,12 @@ public final class Node {
     }
 
     private Integer getPortCounter() {
+        File portFile = new File("src/main/java/com/atypon/training/java/atycoin/p2p/port.txt");
         try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(
-                    new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
-                            "/com/atypon/training/java/atycoin/p2p/port.txt")));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(portFile));
             int port = Integer.parseInt(bufferedReader.readLine());
             peersAddresses.add(port);
-            PrintWriter printWriter = new PrintWriter(new FileWriter(
-                    new File("/Users/asadwan/IntellijIDEAProjects/TrainingProject/src/main/java" +
-                            "/com/atypon/training/java/atycoin/p2p/port.txt")));
+            PrintWriter printWriter = new PrintWriter(new FileWriter(portFile));
             printWriter.write(String.valueOf(port + 1) + "\n");
             printWriter.close();
             bufferedReader.close();
