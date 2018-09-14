@@ -5,10 +5,8 @@ import com.atypon.training.java.atycoin.utility.Utility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
 
 @JsonIgnoreProperties
@@ -17,11 +15,11 @@ public final class Blockchain {
     private static final int DIFFICULTY = 4;
     private static final Logger LOGGER = Logger.getLogger(Blockchain.class.getName());
 
+    private Map<String, TransactionOutput> UTXOs = new HashMap<>();
 
+    private List<Block> chain = new LinkedList<>();
 
-    private HashMap<String, TransactionOutput> UTXOs = new HashMap<>();
-    private ArrayList<Block> chain = new ArrayList<>();
-    private BlockingQueue<AtycoinTransaction> mempool = new LinkedBlockingQueue<>();
+    private Queue<AtycoinTransaction> mempool = new ConcurrentLinkedQueue<>();
 
     private static final Blockchain INSTANCE = new Blockchain();
 
@@ -35,14 +33,14 @@ public final class Blockchain {
     public void createGenesisBlock() {
         String genesisBlockPreviousHash = Utility.repeat("0", 64);
         Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().getAddress());
-        ArrayList<AtycoinTransaction> pickedTransaction = pickTransactionForNextBlock();
+        ArrayList<Transaction> pickedTransaction = pickTransactionForNextBlock();
         Block block = Block.createInstance(genesisBlockPreviousHash, coinbase, pickedTransaction);
         block.mine(DIFFICULTY);
         updateUTXOsListOnAddBlock(block);
         chain.add(block);
     }
 
-    public ArrayList<Block> getBlocks() {
+    public List<Block> getBlocks() {
         return chain;
     }
 
@@ -67,22 +65,22 @@ public final class Blockchain {
     }
 
     @JsonIgnore
-    public HashMap<String, TransactionOutput> getUTXOs() {
+    public Map<String, TransactionOutput> getUTXOs() {
         return UTXOs;
     }
 
     public Block mineBlock(String previousHash) {
         Coinbase coinbase = new Coinbase(Wallet.getSharedInstance().getAddress());
-        ArrayList<AtycoinTransaction> pickedTransaction = pickTransactionForNextBlock();
+        ArrayList<Transaction> pickedTransaction = pickTransactionForNextBlock();
         Block block = Block.createInstance(previousHash, coinbase, pickedTransaction);
         block.mine(DIFFICULTY);
         addBlock(block);
         return block;
     }
 
-    private ArrayList<AtycoinTransaction> pickTransactionForNextBlock() {
-        AtycoinTransaction pickedTransaction;
-        ArrayList<AtycoinTransaction> pickedTransactions = new ArrayList<>();
+    private ArrayList<Transaction> pickTransactionForNextBlock() {
+        Transaction pickedTransaction;
+        ArrayList<Transaction> pickedTransactions = new ArrayList<>();
         while (true) {
             if ((pickedTransaction = mempool.poll()) == null) return pickedTransactions;
             if (pickedTransaction.isTransactionValid()) {
@@ -93,6 +91,7 @@ public final class Blockchain {
     }
 
     @JsonIgnore
+
     public Block getPreviousBlock() {
         return chain.get(chain.size() - 1);
     }
@@ -101,7 +100,7 @@ public final class Blockchain {
         this.mempool.add(transaction);
     }
 
-    public boolean isChainValid(ArrayList<Block> chain) {
+    public boolean isChainValid(List<Block> chain) {
         for (int i = 1; i < chain.size(); i++) {
             if (!isHashChainValid(chain.get(i - 1), chain.get(i))) return false;
             if (!isProofOfWorkValid(chain.get(i - 1))) return false;
@@ -154,16 +153,16 @@ public final class Blockchain {
         Wallet.getSharedInstance().updateLocalUTXOsOnNewTransactionConfirmed(block.getTransactions());
     }
 
-    private void removeSTXOsFromUTXOList(ArrayList<AtycoinTransaction> transactions) {
-        for (AtycoinTransaction transaction : transactions) {
+    private void removeSTXOsFromUTXOList(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
             for (TransactionInput transactionInput : transaction.getInputs()) {
                 UTXOs.remove(transactionInput.getTransactionOutputId());
             }
         }
     }
 
-    private void addUTXOsToUTXOsList(ArrayList<AtycoinTransaction> transactions) {
-        for (AtycoinTransaction transaction : transactions) {
+    private void addUTXOsToUTXOsList(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
             for (TransactionOutput transactionOutput : transaction.getOutputs()) {
                 UTXOs.put(transactionOutput.getId(), transactionOutput);
             }
@@ -176,7 +175,8 @@ public final class Blockchain {
         }
     }
 
-    private void removeTransactionsFromMempool(Block block) {
-        mempool.removeIf(trx -> trx.getTransactionId().equals(block.getTransactions().get(0).getTransactionId()));
+    private void removeTransactionsFromMempool(Block<Transaction> block) {
+        mempool.removeIf(trx -> trx.getTransactionId().equals(block.
+                getTransactions().get(0).getTransactionId()));
     }
 }

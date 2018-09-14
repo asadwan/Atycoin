@@ -27,7 +27,7 @@ public final class TransactionOutput {
         this.id = sha256(recipientAddress + amount + parentTransactionId);
     }
 
-    // For coinbase AtycoinTransaction use
+    // For coinbase transaction use
     public TransactionOutput(String recipientAddress, float amount) {
         this.recipientAddress = recipientAddress;
         this.amount = amount;

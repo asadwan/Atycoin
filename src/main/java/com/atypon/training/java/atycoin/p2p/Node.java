@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentSkipListSet;
 public final class Node {
 
     private static volatile Node instance = new Node();
-
     private Set<Integer> peersAddresses = new ConcurrentSkipListSet<>();
     private String host = "localhost";
     private int port = getPortCounter(); // Represents the peer network address
@@ -37,7 +36,7 @@ public final class Node {
     }
 
     private Integer getPortCounter() {
-        File portFile = new File("src/main/java/com/atypon/training/java/atycoin/p2p/port.txt");
+        File portFile = new File("src/main/resources/port.txt");
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(portFile));
             int port = Integer.parseInt(bufferedReader.readLine());

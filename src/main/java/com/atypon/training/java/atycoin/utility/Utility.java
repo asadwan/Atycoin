@@ -12,10 +12,6 @@ public final class Utility {
     private Utility() {
     }
 
-
-    /**
-     * Calculates the sha256 hash to a given input "data"
-     */
     public static String sha256(String data) {
         MessageDigest md = null;
         try {
@@ -27,9 +23,6 @@ public final class Utility {
         return bytesToHex(md.digest());
     }
 
-    /**
-     * Calculates the sha160 hash to a given input "data"
-     */
     public static String sha160(String data) {
         MessageDigest md = null;
         try {
@@ -41,26 +34,17 @@ public final class Utility {
         return bytesToHex(md.digest());
     }
 
-    /**
-     * Converts from binary(Bytes) to hexadicimal
-     */
     public static String bytesToHex(byte[] bytes) {
         StringBuffer result = new StringBuffer();
         for (byte byt : bytes) result.append(Integer.toString((byt & 0xff) + 0x100, 16).substring(1));
         return result.toString();
     }
 
-    /**
-     * Returns a string that contains str repeated "times" times
-     */
     public static String repeat(String str, int times) {
         return Stream.generate(() -> str).limit(times).collect(joining());
     }
 
-    /**
-     * Return the ECDSA signature resulting from signing data with private key
-     */
-    public static byte[] applyECDSASignuture(PrivateKey privateKey, String data) {
+    public static byte[] applyECDSASignature(PrivateKey privateKey, String data) {
         Signature dsaSignature;
         byte[] signature;
         try {
@@ -75,11 +59,7 @@ public final class Utility {
         return signature;
     }
 
-    /**
-     * Verify the ECDSA signature using the public key and the data signed, returns true
-     * if signature valid otherwise returns false
-     */
-    public static boolean verifyECDSASignuture(PublicKey publicKey, byte[] signature, String data) {
+    public static boolean verifyECDSASignature(PublicKey publicKey, byte[] signature, String data) {
         boolean verified = false;
         try {
             Signature dsaSignature = Signature.getInstance("ECDSA", "BC");
@@ -91,10 +71,6 @@ public final class Utility {
         }
         return verified;
     }
-
-    /**
-     * return a string representation of the key
-     */
 
     public static String getStringFromPublicKey(PublicKey publicKey) {
         try {
@@ -116,6 +92,5 @@ public final class Utility {
             throw new RuntimeException();
         }
     }
-
 
 }

@@ -98,8 +98,9 @@ public final class NodeServerThread implements Runnable {
     }
 
     private void handleNewBlockMessage() {
+
         LOGGER.info("A new block has been received from  " + peerAddress);
-        Type stringBlockMapType = new TypeToken<Map<String, Block>>() {
+        Type stringBlockMapType = new TypeToken<Map<String, Block<AtycoinTransaction>>>() {
         }.getType();
         Map<String, Block> blockMapMap = gson.fromJson(message, stringBlockMapType);
         Block block = blockMapMap.get("block");

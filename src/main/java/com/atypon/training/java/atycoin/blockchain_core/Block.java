@@ -1,28 +1,28 @@
 package com.atypon.training.java.atycoin.blockchain_core;
 
-import com.atypon.training.java.atycoin.transactions_system.AtycoinTransaction;
 import com.atypon.training.java.atycoin.transactions_system.Coinbase;
+import com.atypon.training.java.atycoin.transactions_system.Transaction;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import static com.atypon.training.java.atycoin.utility.Utility.repeat;
 import static com.atypon.training.java.atycoin.utility.Utility.sha256;
 
 @JsonIgnoreProperties
-public final class Block {
+public final class Block<T extends Transaction> {
 
     private int index;
     private Long timestamp;
     private int nonce;
     private String previousBlockHash;
-    private ArrayList<AtycoinTransaction> transactions;
+    private List<T> transactions;
     private Coinbase coinbase;
 
     private Block(String previousBlockHash, Coinbase coinbase,
-                  ArrayList<AtycoinTransaction> transactions) {
+                  List<T> transactions) {
         this.index = Blockchain.getSharedInstance().getBlocks().size() + 1;
         this.coinbase = coinbase;
         this.timestamp = new Date().getTime();
@@ -31,7 +31,7 @@ public final class Block {
     }
 
     public static Block createInstance(String previousBlockHash, Coinbase coinbase,
-                                       ArrayList<AtycoinTransaction> transactions) {
+                                       List<Transaction> transactions) {
         return new Block(previousBlockHash, coinbase, transactions);
     }
 
@@ -55,7 +55,7 @@ public final class Block {
         return nonce;
     }
 
-    public ArrayList<AtycoinTransaction> getTransactions() {
+    public List<T> getTransactions() {
         return transactions;
     }
 

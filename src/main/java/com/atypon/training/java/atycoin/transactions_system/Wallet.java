@@ -7,6 +7,7 @@ import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -15,10 +16,7 @@ import static com.atypon.training.java.atycoin.utility.Utility.sha160;
 public final class Wallet {
 
     private static final Logger LOGGER = Logger.getLogger(Blockchain.class.getName());
-
-
     public Map<String, TransactionOutput> localUTXOs = new HashMap<>();
-
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private String address;
@@ -68,7 +66,7 @@ public final class Wallet {
             return new NullTransaction();
         }
         ArrayList<TransactionInput> inputs = getInputs(amount);
-        AtycoinTransaction newTransaction = TransactionFactory.getTransaction(this.publicKey, recipientAddress,
+        Transaction newTransaction = TransactionFactory.getTransaction(this.publicKey, recipientAddress,
                 amount, inputs);
         newTransaction.processTransaction();
         newTransaction.generateSignature(this.privateKey);
@@ -91,8 +89,8 @@ public final class Wallet {
         return address;
     }
 
-    public void updateLocalUTXOsOnNewTransactionConfirmed(ArrayList<AtycoinTransaction> transactions) {
-        for (AtycoinTransaction transaction : transactions) {
+    public void updateLocalUTXOsOnNewTransactionConfirmed(List<Transaction> transactions) {
+        for (Transaction transaction : transactions) {
             for (TransactionOutput output : transaction.getOutputs()) {
                 if (sha160(transaction.getSenderPublicKeyString()).equals(address) && output.isMine(address))
                     continue;
@@ -102,13 +100,13 @@ public final class Wallet {
         }
     }
 
-    public void addUTXOsToLocalUTXOsList(ArrayList<TransactionOutput> outputs) {
+    public void addUTXOsToLocalUTXOsList(List<TransactionOutput> outputs) {
         for (TransactionOutput transactionOutput : outputs) {
             localUTXOs.put(transactionOutput.getId(), transactionOutput);
         }
     }
 
-    public void removeSTXOsFromLocalUTXOList(ArrayList<TransactionInput> inputs) {
+    public void removeSTXOsFromLocalUTXOList(List<TransactionInput> inputs) {
         for (TransactionInput transactionInput : inputs) {
             localUTXOs.remove(transactionInput.getUTXO().getId());
         }

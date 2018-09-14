@@ -5,7 +5,10 @@ import java.util.ArrayList;
 
 public class TransactionFactory {
 
-    public static AtycoinTransaction getTransaction(PublicKey senderPublicKey, String recipientAddress,
+    private TransactionFactory() {
+    }
+
+    static Transaction getTransaction(PublicKey senderPublicKey, String recipientAddress,
                                                     float amount, ArrayList<TransactionInput> inputs) {
         return new AtycoinTransaction(senderPublicKey, recipientAddress, amount, inputs);
     }
@@ -14,3 +17,4 @@ public class TransactionFactory {
         return new NullTransaction();
     }
 }
+

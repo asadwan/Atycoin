@@ -7,11 +7,13 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import static com.atypon.training.java.atycoin.utility.Utility.*;
 
 @JsonIgnoreProperties
+
 public final class AtycoinTransaction implements Transaction {
 
     private static int sequence = 0;
@@ -22,8 +24,8 @@ public final class AtycoinTransaction implements Transaction {
     private float amount;
     private byte[] signature;
 
-    private ArrayList<TransactionInput> inputs;
-    private ArrayList<TransactionOutput> outputs = new ArrayList<>();
+    private List<TransactionInput> inputs;
+    private List<TransactionOutput> outputs = new ArrayList<>();
 
 
     public AtycoinTransaction(PublicKey senderPublicKey, String recipientAddress,
@@ -92,17 +94,17 @@ public final class AtycoinTransaction implements Transaction {
         return transactionId;
     }
 
-    public ArrayList<TransactionInput> getInputs() {
+    public List<TransactionInput> getInputs() {
         return inputs;
     }
 
-    public ArrayList<TransactionOutput> getOutputs() {
+    public List<TransactionOutput> getOutputs() {
         return outputs;
     }
 
     @Override
     public void generateSignature(PrivateKey privateKey) {
-        signature = applyECDSASignuture(privateKey, this.toString());
+        signature = applyECDSASignature(privateKey, this.toString());
     }
 
     @JsonIgnore
@@ -112,7 +114,7 @@ public final class AtycoinTransaction implements Transaction {
 
     private boolean isSignatureValid() {
         PublicKey senderPublicKey = getPublicKeyFromString(senderPublicKeyString);
-        return verifyECDSASignuture(senderPublicKey, signature, this.toString());
+        return verifyECDSASignature(senderPublicKey, signature, this.toString());
     }
 
     private boolean areInputsValid() {

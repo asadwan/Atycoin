@@ -20,11 +20,11 @@ public class UtilityTests {
 
     @Test
     public void testPublicKeyToStringAndStringToPublicKeyIsWorking() {
-        //signture = utility.applyECDSASignuture(wallet.privateKey, str);
+        //signture = utility.applyECDSASignature(wallet.privateKey, str);
 
         //String publicKeyString = utility.getStringFromPublicKey(wallet.publicKey);
         //PublicKey publicKey = utility.getPublicKeyFromString(publicKeyString);
 
-        //assertTrue(utility.verifyECDSASignuture(publicKey,signture,str));
+        //assertTrue(utility.verifyECDSASignature(publicKey,signture,str));
     }
 }

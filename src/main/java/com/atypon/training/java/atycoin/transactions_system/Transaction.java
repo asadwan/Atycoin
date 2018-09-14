@@ -1,7 +1,7 @@
 package com.atypon.training.java.atycoin.transactions_system;
 
 import java.security.PrivateKey;
-import java.util.ArrayList;
+import java.util.List;
 
 public interface Transaction {
 
@@ -13,9 +13,11 @@ public interface Transaction {
 
     boolean isTransactionValid();
 
-    ArrayList<TransactionInput> getInputs();
+    List<TransactionInput> getInputs();
 
-    ArrayList<TransactionOutput> getOutputs();
+    List<TransactionOutput> getOutputs();
+
+    String getSenderPublicKeyString();
 
 }
 

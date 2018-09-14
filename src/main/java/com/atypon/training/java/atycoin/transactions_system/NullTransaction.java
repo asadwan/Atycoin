@@ -39,4 +39,11 @@ public final class NullTransaction implements Transaction {
     public ArrayList<TransactionOutput> getOutputs() {
         return null;
     }
+
+    @Override
+    public String getSenderPublicKeyString() {
+        return null;
+    }
+
+
 }

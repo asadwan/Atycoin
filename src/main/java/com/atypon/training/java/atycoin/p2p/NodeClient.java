@@ -14,22 +14,14 @@ import java.util.logging.Logger;
 
 public final class NodeClient {
 
-    private static volatile NodeClient INSTANCE = new NodeClient();
+    private static final NodeClient INSTANCE = new NodeClient();
     private static final Integer PEER_ADDRESS = Node.getSharedInstance().getPort();
     private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
     private static Gson gson = new Gson();
 
     public List<Connection> peersConnections = new ArrayList<>();
 
-
     public static NodeClient getSharedInstance() {
-        if (INSTANCE == null) { // Check 1
-            synchronized (NodeServer.class) {
-                if (INSTANCE == null) { // Check 2
-                    INSTANCE = new NodeClient();
-                }
-            }
-        }
         return INSTANCE;
     }
 
@@ -148,8 +140,8 @@ public final class NodeClient {
     }
 
     void sendMyChainToPeer(Integer peerAddress) {
-        Map<String, ArrayList<Block>> chainMessage = new HashMap<>();
-        ArrayList<Block> chain = Blockchain.getSharedInstance().getBlocks();
+        Map<String, List<Block>> chainMessage = new HashMap<>();
+        List<Block> chain = Blockchain.getSharedInstance().getBlocks();
         chainMessage.put("chain", chain);
         Gson gson = new Gson();
         String messageJson = gson.toJson(chainMessage);

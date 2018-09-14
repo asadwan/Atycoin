@@ -3,24 +3,14 @@ package com.atypon.training.java.atycoin.p2p;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.logging.Logger;
 
 public final class NodeServer extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger(NodeClient.class.getName());
-
-    private static volatile NodeServer INSTANCE = null;
+    private static final NodeServer INSTANCE = new NodeServer();
     private int nodeServerPort = Node.getSharedInstance().getPort();
     private ServerSocket server = null;
 
     public static NodeServer getSharedInstance() {
-        if (INSTANCE == null) { // Check 1
-            synchronized (NodeServer.class) {
-                if (INSTANCE == null) { // Check 2
-                    INSTANCE = new NodeServer();
-                }
-            }
-        }
         return INSTANCE;
     }
 
